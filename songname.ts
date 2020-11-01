@@ -24,7 +24,7 @@ async function csvToMap() {
       rows.slice(1).map(row => row[c]).filter((val, v) => val || v === 0)]));
 }
 
-async function main() {
+export default async function generate() {
   const map = await csvToMap();
 
   let title = pick(map.songName);
@@ -33,7 +33,5 @@ async function main() {
     title = title.replace(/\$\{(.+?)\}/g, (_: string, key: string) => pick(map[key]));
   }
 
-  console.log(title);
+  return title;
 }
-
-main();
