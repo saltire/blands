@@ -2,28 +2,25 @@ import { readCsv, csvToMap, CsvRows, ColumnsMap } from './csv.ts';
 import { pick, range } from './utils.ts';
 
 
-const csvPath = './songname.csv';
+const csvPaths = ['./metal.csv', './verbthenoun.csv'];
 
-export default class SongGenerator {
-  map: Promise<ColumnsMap>;
+export default class BandGenerator {
+  private maps: Promise<ColumnsMap[]>;
 
   constructor() {
-    this.map = readCsv(csvPath).then(csvToMap);
+    this.maps = Promise.all(csvPaths.map(csvPath => readCsv(csvPath).then(csvToMap)));
   }
 
   async generate() {
-    const map = await this.map;
-
-    let title = pick(map.songName);
-
-    while (title.includes('$')) {
-      title = title.replace(/\$\{(.+?)\}/g, (_: string, key: string) => pick(map[key]));
-    }
-
-    return title;
+    const map = pick(await this.maps);
+    return Object.values(map).map(list => pick(list)).join(' ');
   }
 }
 
+
+// async function readJson(input: string): Promise<ColumnsMap> {
+//   return Deno.readTextFile(input).then(JSON.parse);
+// }
 
 // async function main() {
 //   const metal1 = await readJson('./metal1.json');
