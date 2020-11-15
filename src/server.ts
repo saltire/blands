@@ -1,4 +1,5 @@
-import { Application, Router } from 'https://deno.land/x/oak/mod.ts';
+import { Application, Router, send } from 'https://deno.land/x/oak/mod.ts';
+import { renderFile } from 'https://raw.githubusercontent.com/syumai/dejs/0.9.0/mod.ts';
 import * as flags from 'https://deno.land/std/flags/mod.ts';
 
 import BandGenerator from './bandname.ts';
@@ -12,19 +13,21 @@ const router = new Router();
 const bandGenerator = new BandGenerator();
 const songGenerator = new SongGenerator();
 
-router.get('/', async ({ response }) => {
-  response.body = JSON.stringify(await battle(), null, 2);
-});
+app.use(router
+  .get('/', async ({ response }) => {
+    response.body = await renderFile('views/battle.ejs', await battle());
+  })
+  .get('/band', async ({ response }) => {
+    response.body = await bandGenerator.generate();
+  })
+  .get('/song', async ({ response }) => {
+    response.body = await songGenerator.generate();
+  })
+  .routes());
 
-router.get('/band', async ({ response }) => {
-  response.body = await bandGenerator.generate();
+app.use(async (context) => {
+  await context.send({ root: 'static' });
 });
-
-router.get('/song', async ({ response }) => {
-  response.body = await songGenerator.generate();
-});
-
-app.use(router.routes());
 
 const port = Number(flags.parse(Deno.args).port) || 8000;
 console.log('Listening on port', port);

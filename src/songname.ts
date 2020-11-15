@@ -20,7 +20,9 @@ export default class SongGenerator {
       title = title.replace(/\$\{(.+?)\}/g, (_: string, key: string) => pick(map[key]));
     }
 
-    return title;
+    return title.split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   }
 }
 
