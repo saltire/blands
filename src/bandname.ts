@@ -2,7 +2,7 @@ import { readCsv, csvToMap, CsvRows, ColumnsMap } from './csv.ts';
 import { pick, range } from './utils.ts';
 
 
-const csvPaths = ['./metal.csv', './verbthenoun.csv'];
+const csvPaths = ['data/metal.csv', 'data/verbthenoun.csv'];
 
 export default class BandGenerator {
   private maps: Promise<ColumnsMap[]>;

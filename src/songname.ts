@@ -2,7 +2,7 @@ import { readCsv, csvToMap, CsvRows, ColumnsMap } from './csv.ts';
 import { pick, range } from './utils.ts';
 
 
-const csvPath = './songname.csv';
+const csvPath = 'data/songname.csv';
 
 export default class SongGenerator {
   map: Promise<ColumnsMap>;
