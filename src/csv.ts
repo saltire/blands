@@ -6,7 +6,7 @@ export type ColumnsMap = { [column: string]: string[] };
 
 export async function readCsv(input: string): Promise<CsvRows> {
   const data = await Deno.readTextFile(input);
-  return data.split('\n').filter(Boolean)
+  return data.split(/\r?\n/).filter(Boolean)
     // Split rows only at commas that are followed by an even number of quotation marks.
     .map(row => row.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)
       .map(value => value.replace(/^"|"$/g, '')));

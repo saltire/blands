@@ -1,27 +1,38 @@
-import { Application, Router, send } from 'https://deno.land/x/oak/mod.ts';
+import { Application, Router } from 'https://deno.land/x/oak/mod.ts';
+// import { organ } from 'https://raw.githubusercontent.com/denjucks/organ/master/mod.ts';
 import { renderFile } from 'https://raw.githubusercontent.com/syumai/dejs/0.9.0/mod.ts';
 import * as flags from 'https://deno.land/std/flags/mod.ts';
 
-import BandGenerator from './bandname.ts';
-import SongGenerator from './songname.ts';
-import battle from "./battle.ts";
+import battle from './battle.ts';
+import Generator from './generator.ts';
 
+
+const bandGen = Generator.bandGenerator();
+const songGen = Generator.songGenerator();
 
 const app = new Application();
+// app.use(organ());
 const router = new Router();
 
-const bandGenerator = new BandGenerator();
-const songGenerator = new SongGenerator();
+app.use(async ({ response }, next) => {
+  await next()
+    .catch(err => {
+      console.error('Unhandled error:', err.stack);
+
+      response.status = err.statusCode || err.status || 500;
+      response.body = err.message;
+    });
+});
 
 app.use(router
   .get('/', async ({ response }) => {
     response.body = await renderFile('views/battle.ejs', await battle());
   })
   .get('/band', async ({ response }) => {
-    response.body = await bandGenerator.generate();
+    response.body = await bandGen.generate();
   })
   .get('/song', async ({ response }) => {
-    response.body = await songGenerator.generate();
+    response.body = await songGen.generate();
   })
   .routes());
 

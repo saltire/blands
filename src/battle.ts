@@ -1,5 +1,4 @@
-import BandGenerator from './bandname.ts';
-import SongGenerator from './songname.ts';
+import Generator from './generator.ts';
 import { pick, range, shuffle } from './utils.ts';
 
 
@@ -33,8 +32,8 @@ const generateColor = () => {
 const formatBand = (band: Band): BandInfo => band;
 
 export default async function battle() {
-  const bandGen = new BandGenerator();
-  const songGen = new SongGenerator();
+  const bandGen = Generator.bandGenerator();
+  const songGen = Generator.songGenerator();
 
   const bands = await Promise.all(range(roundCount).map(async () => ({
     name: await bandGen.generate(),
