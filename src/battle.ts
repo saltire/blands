@@ -9,6 +9,8 @@ type Band = {
   name: string,
   color: string,
   songs: Song[],
+  level?: number,
+  buzz?: number,
 };
 type BandInfo = {
   name: string,
@@ -74,21 +76,51 @@ function runBattle(bands: Band[]): Battle {
   };
 }
 
-export async function generateBattle(bandCount: number = 5) {
+export async function generateBattle(battleSize: number = 5) {
   const [bandGen, songGen] = await Promise.all([
     getBandGenerator(),
     getSongGenerator(),
   ]);
 
-  const bands: Band[] = range(bandCount).map(() => ({
+  const bands: Band[] = range(battleSize).map(() => ({
     name: bandGen.generate(),
     color: generateColor(),
-    songs: range(bandCount - 1).map(() => ({
+    songs: range(battleSize - 1).map(() => ({
       name: songGen.generate(),
-      performed: false,
     })),
-    eliminated: false,
   }));
 
   return runBattle(bands);
+}
+
+export async function generateWeeks() {
+  const [bandGen, songGen] = await Promise.all([
+    getBandGenerator(),
+    getSongGenerator(),
+  ]);
+
+  const levelCount = 5;
+  const battleSize = 5;
+
+  const bands = range(levelCount).flatMap(l => {
+    const level = levelCount - l;
+    const levelBaseBuzz = Math.pow(10, level);
+    return range((l + 1) * battleSize).map(() => ({
+      name: bandGen.generate(),
+      color: generateColor(),
+      songs: range(battleSize - 1).map(() => ({
+        name: songGen.generate(),
+      })),
+      level,
+      buzz: levelBaseBuzz,
+    } as Band));
+  });
+
+  // Halve each band's buzz without changing level.
+  // For each battle at each level, pick bands at that level from the array.
+  // When picking, prioritize bands that placed top 3 in a battle last week.
+  // Run the battles.
+  // Award buzz to bands based on placement.
+  // Update band levels where applicable.
+  // Repeat.
 }
