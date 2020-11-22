@@ -2,21 +2,30 @@ import Generator from './generator.ts';
 import { pick, range, shuffle } from './utils.ts';
 
 
-const roundCount = 10;
-
 type Song = {
   name: string,
-  performed: boolean,
 };
 type Band = {
   name: string,
   color: string,
   songs: Song[],
-  eliminated: boolean,
 };
 type BandInfo = {
   name: string,
   color: string,
+};
+type Performance = {
+  band: BandInfo,
+  song: string,
+  score: number,
+};
+type Round = {
+  performances: Performance[],
+  eliminee: BandInfo,
+};
+type Battle = {
+  rounds: Round[],
+  places: BandInfo[],
 };
 
 const randomChannelValue = (min: number) => Math.round(Math.random() * (255 - min)) + min;
@@ -31,24 +40,14 @@ const generateColor = () => {
 
 const formatBand = (band: Band): BandInfo => band;
 
-export default async function battle() {
-  const bandGen = Generator.bandGenerator();
-  const songGen = Generator.songGenerator();
+async function runBattle(bands: Band[]): Promise<Battle> {
+  const placedBands: Band[] = [];
+  const performedSongs = new Set<Song>();
 
-  const bands = await Promise.all(range(roundCount).map(async () => ({
-    name: await bandGen.generate(),
-    color: generateColor(),
-    songs: await Promise.all(range(roundCount).map(async () => ({
-      name: await songGen.generate(),
-      performed: false,
-    }))),
-    eliminated: false,
-  })));
-
-  const rounds = range(roundCount - 1).map(() => {
-    const performances = shuffle(bands.filter(b => !b.eliminated)).map((band) => {
-      const song = pick(band.songs.filter(s => !s.performed));
-      song.performed = true;
+  const rounds = range(bands.length - 1).map(() => {
+    const performances = shuffle(bands.filter(b => !placedBands.includes(b))).map((band) => {
+      const song = pick(band.songs.filter(s => !performedSongs.has(s)));
+      performedSongs.add(song);
       return {
         band,
         song,
@@ -57,7 +56,7 @@ export default async function battle() {
     });
 
     const minPerf = performances.reduce((mp, perf) => (perf.score < mp.score ? perf : mp));
-    minPerf.band.eliminated = true;
+    placedBands.unshift(minPerf.band);
 
     return {
       performances: performances.map(perf => ({
@@ -71,6 +70,23 @@ export default async function battle() {
 
   return {
     rounds,
-    winner: formatBand(bands.find(band => !band.eliminated) as Band),
+    places: [bands.find(b => !placedBands.includes(b)) as Band, ...placedBands.map(formatBand)],
   };
+}
+
+export async function generateBattle(bandCount: number = 5) {
+  const bandGen = Generator.bandGenerator();
+  const songGen = Generator.songGenerator();
+
+  const bands: Band[] = await Promise.all(range(bandCount).map(async () => ({
+    name: await bandGen.generate(),
+    color: generateColor(),
+    songs: await Promise.all(range(bandCount - 1).map(async () => ({
+      name: await songGen.generate(),
+      performed: false,
+    }))),
+    eliminated: false,
+  })));
+
+  return runBattle(bands);
 }

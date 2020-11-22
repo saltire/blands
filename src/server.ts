@@ -3,7 +3,7 @@ import { Application, Router } from 'https://deno.land/x/oak/mod.ts';
 import { renderFile } from 'https://raw.githubusercontent.com/syumai/dejs/0.9.0/mod.ts';
 import * as flags from 'https://deno.land/std/flags/mod.ts';
 
-import battle from './battle.ts';
+import { generateBattle } from './battle.ts';
 import Generator from './generator.ts';
 
 
@@ -26,7 +26,7 @@ app.use(async ({ response }, next) => {
 
 app.use(router
   .get('/', async ({ response }) => {
-    response.body = await renderFile('views/battle.ejs', await battle());
+    response.body = await renderFile('views/battle.ejs', await generateBattle());
   })
   .get('/band', async ({ response }) => {
     response.body = await bandGen.generate();
