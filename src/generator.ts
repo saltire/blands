@@ -2,36 +2,30 @@ import { readCsv, csvToMap, ColumnsMap } from './csv.ts';
 import { pick } from './utils.ts';
 
 
-export default class Generator {
-  static bandGenerator() {
-    return new Generator('data/bands.csv', false);
-  }
+export async function getGenerator(csvPath: string, capitalize?: boolean) {
+  const map = await readCsv(csvPath).then(csvToMap);
 
-  static songGenerator() {
-    return new Generator('data/songs.csv', true);
-  }
+  return {
+    generate() {
+      let title = pick(map.templates);
 
-  map: Promise<ColumnsMap>;
-  capitalize: boolean;
+      while (title.includes('{')) {
+        title = title.replace(/\{(.+?)\}/g, (_: string, key: string) => pick(map[key]));
+      }
 
-  constructor(csvPath: string, capitalize?: boolean) {
-    this.map = readCsv(csvPath).then(csvToMap);
-    this.capitalize = !!capitalize;
-  }
+      return !capitalize ? title : title.split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    },
+  };
+}
 
-  async generate() {
-    const map = await this.map;
+export async function getBandGenerator() {
+  return getGenerator('data/bands.csv', false);
+}
 
-    let title = pick(map.templates);
-
-    while (title.includes('{')) {
-      title = title.replace(/\{(.+?)\}/g, (_: string, key: string) => pick(map[key]));
-    }
-
-    return !this.capitalize ? title : title.split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  }
+export async function getSongGenerator() {
+  return getGenerator('data/songs.csv', true);
 }
 
 

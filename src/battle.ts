@@ -1,4 +1,4 @@
-import Generator from './generator.ts';
+import { getBandGenerator, getSongGenerator } from './generator.ts';
 import { pick, range, shuffle } from './utils.ts';
 
 
@@ -40,7 +40,7 @@ const generateColor = () => {
 
 const formatBand = (band: Band): BandInfo => band;
 
-async function runBattle(bands: Band[]): Promise<Battle> {
+function runBattle(bands: Band[]): Battle {
   const placedBands: Band[] = [];
   const performedSongs = new Set<Song>();
 
@@ -75,18 +75,20 @@ async function runBattle(bands: Band[]): Promise<Battle> {
 }
 
 export async function generateBattle(bandCount: number = 5) {
-  const bandGen = Generator.bandGenerator();
-  const songGen = Generator.songGenerator();
+  const [bandGen, songGen] = await Promise.all([
+    getBandGenerator(),
+    getSongGenerator(),
+  ]);
 
-  const bands: Band[] = await Promise.all(range(bandCount).map(async () => ({
-    name: await bandGen.generate(),
+  const bands: Band[] = range(bandCount).map(() => ({
+    name: bandGen.generate(),
     color: generateColor(),
-    songs: await Promise.all(range(bandCount - 1).map(async () => ({
-      name: await songGen.generate(),
+    songs: range(bandCount - 1).map(() => ({
+      name: songGen.generate(),
       performed: false,
-    }))),
+    })),
     eliminated: false,
-  })));
+  }));
 
   return runBattle(bands);
 }

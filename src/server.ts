@@ -4,11 +4,13 @@ import { renderFile } from 'https://raw.githubusercontent.com/syumai/dejs/0.9.0/
 import * as flags from 'https://deno.land/std/flags/mod.ts';
 
 import { generateBattle } from './battle.ts';
-import Generator from './generator.ts';
+import { getBandGenerator, getSongGenerator } from './generator.ts';
 
 
-const bandGen = Generator.bandGenerator();
-const songGen = Generator.songGenerator();
+const [bandGen, songGen] = await Promise.all([
+  getBandGenerator(),
+  getSongGenerator(),
+]);
 
 const app = new Application();
 // app.use(organ());
@@ -28,11 +30,11 @@ app.use(router
   .get('/', async ({ response }) => {
     response.body = await renderFile('views/battle.ejs', await generateBattle());
   })
-  .get('/band', async ({ response }) => {
-    response.body = await bandGen.generate();
+  .get('/band', ({ response }) => {
+    response.body = bandGen.generate();
   })
-  .get('/song', async ({ response }) => {
-    response.body = await songGen.generate();
+  .get('/song', ({ response }) => {
+    response.body = songGen.generate();
   })
   .routes());
 
