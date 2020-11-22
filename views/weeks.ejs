@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <title>Blattle of the Blands</title>
+    <link rel='stylesheet' href='/style.css'>
+  </head>
+  <body>
+    <div class='flex'>
+      <% weeks.forEach((week, w) => { %>
+        <div>
+          <h1>Week <%= w + 1 %></h1>
+          <div class='flex'>
+            <div>
+              <% week.levels.forEach((level) => { %>
+                <h2>Level <%= level.level %></h2>
+                <div class='flex'>
+                  <div>
+                    <h2>Bands</h2>
+                    <% level.bands.sort((a, b) => b.buzz - a.buzz).forEach((band) => { %>
+                      <p><span style='color: <%= band.color %>'><%= band.name %></span> - <%= band.buzz %></p>
+                    <% }); %>
+                  </div>
+                  <div>
+                    <h2>Battles</h2>
+                    <% level.battles.forEach((battle, b) => { %>
+                      <div class='pad'>
+                        <% battle.rankedBands.forEach((band) => { %>
+                          <p><span style='color: <%= band.color %>'><%= band.name %></span> - <%= band.buzz %> (<%= band.level %>)</p>
+                        <% }); %>
+                      </div>
+                    <% }); %>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  </body>
+</html>

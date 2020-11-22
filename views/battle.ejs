@@ -7,15 +7,13 @@
   </head>
   <body>
     <% rounds.forEach((round, i) => { %>
-    <h2>Round <%= i + 1 %></h2>
-    <p>
+      <h2>Round <%= i + 1 %></h2>
       <% round.performances.forEach((perf) => { %>
-        <span style='color: <%= perf.band.color %>'><%= perf.band.name %></span> - <%= perf.song %> - <b><%= perf.score %></b><br>
-      <% }) %>
-    </p>
-    <p>Eliminated: <span style='color: <%= round.eliminee.color %>'><%= round.eliminee.name %></span></p>
-    <% }) %>
+        <p><span style='color: <%= perf.band.color %>'><%= perf.band.name %></span> - <%= perf.song.name %> - <b><%= perf.score %></b></p>
+      <% }); %>
+      <h3>Eliminated: <span style='color: <%= round.eliminee.color %>'><%= round.eliminee.name %></span></h3>
+    <% }); %>
 
-    <h2>Winner: <span style='color: <%= places[0].color %>'><%= places[0].name %></span></h2>
+    <h2>Winner: <span style='color: <%= rankedBands[0].color %>'><%= rankedBands[0].name %></span></h2>
   </body>
 </html>

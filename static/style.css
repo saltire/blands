@@ -2,8 +2,22 @@ body {
   background: black;
   color: white;
   font-family: sans-serif;
+  overflow-x: scroll;
 }
 
-h2 {
+h1, h2, h3 {
   margin: 2rem 0 1rem;
+}
+
+.pad {
+  margin-bottom: 1.5em;
+}
+
+p {
+  margin: 0 1rem 0 0;
+  white-space: nowrap;
+}
+
+.flex {
+  display: flex;
 }

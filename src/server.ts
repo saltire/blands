@@ -3,7 +3,7 @@ import { Application, Router } from 'https://deno.land/x/oak/mod.ts';
 import { renderFile } from 'https://raw.githubusercontent.com/syumai/dejs/0.9.0/mod.ts';
 import * as flags from 'https://deno.land/std/flags/mod.ts';
 
-import { generateBattle } from './battle.ts';
+import { generateBattle, generateWeeks } from './battle.ts';
 import { getBandGenerator, getSongGenerator } from './generator.ts';
 
 
@@ -28,6 +28,9 @@ app.use(async ({ response }, next) => {
 
 app.use(router
   .get('/', async ({ response }) => {
+    response.body = await renderFile('views/weeks.ejs', { weeks: await generateWeeks(5) })
+  })
+  .get('/battle', async ({ response }) => {
     response.body = await renderFile('views/battle.ejs', await generateBattle());
   })
   .get('/band', ({ response }) => {
