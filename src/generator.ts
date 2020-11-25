@@ -1,5 +1,5 @@
-import { readCsv, csvToMap, ColumnsMap } from './csv.ts';
-import { pick } from './utils.ts';
+import { readCsv, csvToMap } from './csv';
+import { pick } from './utils';
 
 
 export async function getGenerator(csvPath: string, capitalize?: boolean) {

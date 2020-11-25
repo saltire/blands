@@ -1,5 +1,5 @@
-import { getBandGenerator, getSongGenerator } from './generator.ts';
-import { pick, pickOut, range, shuffle } from './utils.ts';
+import { getBandGenerator, getSongGenerator } from './generator';
+import { pick, pickOut, range, shuffle } from './utils';
 
 
 type Song = {

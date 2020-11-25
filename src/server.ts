@@ -1,20 +1,20 @@
-import { Application, Router } from 'https://deno.land/x/oak/mod.ts';
-// import { organ } from 'https://raw.githubusercontent.com/denjucks/organ/master/mod.ts';
-import { renderFile } from 'https://raw.githubusercontent.com/syumai/dejs/0.9.0/mod.ts';
-import * as flags from 'https://deno.land/std/flags/mod.ts';
+import Koa from 'koa';
+import Router from '@koa/router';
+import render from 'koa-ejs';
+import serveStatic from 'koa-static';
+import path from 'path';
 
-import { generateBattle, generateWeeks } from './battle.ts';
-import { getBandGenerator, getSongGenerator } from './generator.ts';
+import { generateBattle, generateWeeks } from './battle';
+import { getBandGenerator, getSongGenerator } from './generator';
 
 
-const [bandGen, songGen] = await Promise.all([
-  getBandGenerator(),
-  getSongGenerator(),
-]);
-
-const app = new Application();
-// app.use(organ());
+const app = new Koa();
 const router = new Router();
+render(app, {
+  layout: false,
+  root: path.resolve(__dirname, '../views'),
+  viewExt: 'ejs',
+});
 
 app.use(async ({ response }, next) => {
   await next()
@@ -27,24 +27,24 @@ app.use(async ({ response }, next) => {
 });
 
 app.use(router
-  .get('/', async ({ response }) => {
-    response.body = await renderFile('views/weeks.ejs', { weeks: await generateWeeks(5) })
+  .get('/', async (ctx) => {
+    await ctx.render('weeks', { weeks: await generateWeeks(5) })
   })
-  .get('/battle', async ({ response }) => {
-    response.body = await renderFile('views/battle.ejs', await generateBattle());
+  .get('/battle', async ({ render }) => {
+    await render('battle', await generateBattle());
   })
-  .get('/band', ({ response }) => {
+  .get('/band', async ({ response }) => {
+    const bandGen = await getBandGenerator();
     response.body = bandGen.generate();
   })
-  .get('/song', ({ response }) => {
+  .get('/song', async ({ response }) => {
+    const songGen = await getSongGenerator();
     response.body = songGen.generate();
   })
   .routes());
 
-app.use(async (context) => {
-  await context.send({ root: 'static' });
-});
+app.use(serveStatic(path.resolve(__dirname, '../static')));
 
-const port = Number(flags.parse(Deno.args).port) || 8000;
+const port = Number(process.env.PORT) || 8000;
 console.log('Listening on port', port);
-await app.listen({ port });
+app.listen({ port });

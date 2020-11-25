@@ -1,11 +1,13 @@
-import { range } from './utils.ts';
+import { promises as fs } from 'fs';
+
+import { range } from './utils';
 
 
 export type CsvRows = string[][];
 export type ColumnsMap = { [column: string]: string[] };
 
 export async function readCsv(input: string): Promise<CsvRows> {
-  const data = await Deno.readTextFile(input);
+  const data = await fs.readFile(input, { encoding: 'utf-8' });
   return data.split(/\r?\n/).filter(Boolean)
     // Split rows only at commas that are followed by an even number of quotation marks.
     .map(row => row.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)
@@ -13,7 +15,7 @@ export async function readCsv(input: string): Promise<CsvRows> {
 }
 
 export async function writeCsv(rows: CsvRows, output: string): Promise<void> {
-  Deno.writeTextFile(output, rows.map(row => row.join(',')).join('\n'));
+  await fs.writeFile(output, rows.map(row => row.join(',')).join('\n'), { encoding: 'utf-8' });
 }
 
 export function csvToMap(rows: CsvRows): ColumnsMap {
