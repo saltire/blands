@@ -1,47 +1,7 @@
-import { getBandGenerator, getSongGenerator } from './generator';
+import { getBandGenerator } from './generator';
+import { Song, Band, Battle, Week } from './types';
 import { pick, pickOut, range, shuffle } from './utils';
 
-
-type Song = {
-  name: string,
-};
-type Band = {
-  name: string,
-  color: string,
-  songs: Song[],
-  level: number,
-  buzz: number,
-};
-type Performance = {
-  band: Band,
-  song: Song,
-  score: number,
-};
-type Round = {
-  performances: Performance[],
-  eliminee: Band,
-};
-type Battle = {
-  rounds: Round[],
-  rankedBands: Band[],
-};
-type Week = {
-  levels: {
-    level: number,
-    bands: Band[],
-    battles: Battle[],
-  }[],
-};
-
-const randomChannelValue = (min: number) => Math.round(Math.random() * (255 - min)) + min;
-
-const generateColor = () => {
-  const zc = Math.floor(Math.random() * 3);
-  return '#' + range(3)
-    // One RGB channel can be from 0-255, the others from 64-255.
-    .map(c => randomChannelValue(c === zc ? 0 : 64).toString(16).padStart(2, '0'))
-    .join('')
-};
 
 function runBattle(bands: Band[]): Battle {
   const rankedBands: Band[] = [];
@@ -76,20 +36,10 @@ function runBattle(bands: Band[]): Battle {
 }
 
 export async function generateBattle(battleSize: number = 5) {
-  const [bandGen, songGen] = await Promise.all([
-    getBandGenerator(),
-    getSongGenerator(),
-  ]);
+  const bandGen = await getBandGenerator();
 
-  const bands: Band[] = range(battleSize).map(() => ({
-    name: bandGen.generate(),
-    color: generateColor(),
-    songs: range(battleSize - 1).map(() => ({
-      name: songGen.generate(),
-    })),
-    level: 1,
-    buzz: 0,
-  }));
+  const bands: Band[] = range(battleSize)
+    .map(() => bandGen.generate({ songCount: battleSize - 1 }));
 
   return runBattle(bands);
 }
@@ -135,10 +85,7 @@ function runWeek(bands: Band[], levelCount: number, battleSize: number): Week {
 }
 
 export async function generateWeeks(weekCount: number = 1) {
-  const [bandGen, songGen] = await Promise.all([
-    getBandGenerator(),
-    getSongGenerator(),
-  ]);
+  const bandGen = await getBandGenerator();
 
   const levelCount = 5;
   const battleSize = 5;
@@ -147,20 +94,11 @@ export async function generateWeeks(weekCount: number = 1) {
   return range(weekCount).map(() => {
     range(levelCount).forEach(l => {
       const level = l + 1;
-      const levelBaseBuzz = Math.pow(10, level);
       const battleCount = levelCount - l;
       const bandCount = battleCount * battleSize;
       const levelBands = bands.filter(b => b.level === level);
       range(Math.max(0, bandCount - levelBands.length)).forEach(() => {
-        bands.push({
-          name: bandGen.generate(),
-          color: generateColor(),
-          songs: range(battleSize - 1).map(() => ({
-            name: songGen.generate(),
-          })),
-          level,
-          buzz: levelBaseBuzz,
-        });
+        bands.push(bandGen.generate({ level, songCount: battleSize - 1 }));
       });
     });
 

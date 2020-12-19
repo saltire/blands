@@ -5,7 +5,7 @@ import serveStatic from 'koa-static';
 import path from 'path';
 
 import { generateBattle, generateWeeks } from './battle';
-import { getBandGenerator, getSongGenerator } from './generator';
+import { getBandNameGenerator, getSongNameGenerator } from './generator';
 
 
 const app = new Koa();
@@ -34,11 +34,11 @@ app.use(router
     await render('battle', await generateBattle());
   })
   .get('/band', async ({ response }) => {
-    const bandGen = await getBandGenerator();
+    const bandGen = await getBandNameGenerator();
     response.body = bandGen.generate();
   })
   .get('/song', async ({ response }) => {
-    const songGen = await getSongGenerator();
+    const songGen = await getSongNameGenerator();
     response.body = songGen.generate();
   })
   .routes());

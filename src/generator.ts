@@ -1,8 +1,16 @@
+import { generateColor } from './color';
 import { readCsv, csvToMap } from './csv';
-import { pick } from './utils';
+import { Band } from './types';
+import { pick, range } from './utils';
 
 
-export async function getGenerator(csvPath: string, capitalize?: boolean) {
+interface GeneratorConfig {}
+
+export interface Generator<T> {
+  generate: (config?: GeneratorConfig) => T,
+}
+
+export async function getGenerator(csvPath: string, capitalize?: boolean): Promise<Generator<string>> {
   const map = await readCsv(csvPath).then(csvToMap);
 
   return {
@@ -20,25 +28,38 @@ export async function getGenerator(csvPath: string, capitalize?: boolean) {
   };
 }
 
-export async function getBandGenerator() {
+export async function getBandNameGenerator() {
   return getGenerator('data/bands.csv', false);
 }
 
-export async function getSongGenerator() {
+export async function getSongNameGenerator() {
   return getGenerator('data/songs.csv', true);
 }
 
+interface BandGeneratorConfig extends GeneratorConfig {
+  level?: number,
+  songCount?: number,
+}
 
-// async function main() {
-//   const metal1 = await readJson('./metal1.json');
-//   const metal2 = await readJson('./metal2.json');
+export async function getBandGenerator(): Promise<Generator<Band>> {
+  const [bandNameGen, songNameGen] = await Promise.all([
+    getBandNameGenerator(),
+    getSongNameGenerator(),
+  ]);
 
-//   const metal = {
-//     start: mergeSet(metal1.start, metal2.start).sort(),
-//     end: mergeSet(metal1.end, metal2.end).sort(),
-//   };
+  return {
+    generate(config?: BandGeneratorConfig): Band {
+      const { songCount, level } = { songCount: 10, level: 1, ...config };
 
-//   return writeCsv(mapToCsv(metal), './metal.csv');
-// }
-
-// await main();
+      return {
+        name: bandNameGen.generate(),
+        color: generateColor(),
+        songs: range(songCount || 10).map(() => ({
+          name: songNameGen.generate(),
+        })),
+        level,
+        buzz: Math.pow(10, level),
+      };
+    },
+  };
+}
