@@ -6,6 +6,7 @@ import path from 'path';
 
 import { generateBattle, generateWeeks } from './battle';
 import { getBandNameGenerator, getSongNameGenerator } from './generator';
+import { init, test } from './db';
 
 
 const app = new Koa();
@@ -40,6 +41,12 @@ app.use(router
   .get('/song', async ({ response }) => {
     const songGen = await getSongNameGenerator();
     response.body = songGen.generate();
+  })
+  .get('/testDb', async ({ response }) => {
+    await init();
+    const data = await test();
+    response.body = JSON.stringify(data);
+    response.type = 'json';
   })
   .routes());
 
