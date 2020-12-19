@@ -1,5 +1,5 @@
 import { getBandGenerator } from './generator';
-import { Song, Band, Battle, Week } from './types';
+import { Band, Song, BandPerformance, Week, Battle } from './types';
 import { pick, pickOut, range, shuffle } from './utils';
 
 
@@ -44,14 +44,16 @@ export async function generateBattle(battleSize: number = 5) {
   return runBattle(bands);
 }
 
+function getBuzzAwarded(levelBaseBuzz: number, index: number) {
+  return levelBaseBuzz * ([10, 5, 2.5][index] || 1);
+}
+
 function runWeek(bands: Band[], levelCount: number, battleSize: number): Week {
-  // Halve each band's buzz without changing level.
   // For each battle at each level, pick bands at that level from the array.
   // TODO: When picking, prioritize bands that placed top 3 in a battle last week.
   // Run the battles.
-  // Award buzz to bands based on placement.
-  // Update band levels where applicable.
 
+  // Halve each band's buzz without changing level.
   bands.forEach(band => {
     band.buzz = Math.floor(band.buzz / 2);
   });
@@ -67,16 +69,41 @@ function runWeek(bands: Band[], levelCount: number, battleSize: number): Week {
         battles: range(l + 1).map(() => {
           const battleBands = range(battleSize).map(() => pickOut(levelBands) as Band);
           const battle = runBattle(battleBands);
-          battle.rankedBands[0].buzz += levelBaseBuzz * 10;
-          battle.rankedBands[1].buzz += levelBaseBuzz * 5;
-          battle.rankedBands[2].buzz += levelBaseBuzz * 2.5;
-          battle.rankedBands.slice(3).forEach(band => {
-            band.buzz += levelBaseBuzz;
+
+          const bandSnapshot = battle.rankedBands.map(band => JSON.parse(JSON.stringify(band)));
+
+          battleBands.forEach(band => {
+            const rankedIndex = battle.rankedBands.indexOf(band);
+            const buzzAwarded = getBuzzAwarded(levelBaseBuzz, rankedIndex);
+            const newBuzz = band.buzz + buzzAwarded;
+            const newLevel = Math.min(levelCount, Math.max(0, Math.floor(Math.log10(newBuzz))));
+
+            // Add a summary of the battle to the band data.
+            band.battles.push({
+              startBuzz: band.buzz,
+              startLevel: band.level,
+              performances: battle.rounds
+                .map(round => {
+                  const performance = round.performances.find(perf => perf.band === band);
+                  return performance && {
+                    song: performance.song,
+                    score: performance.score,
+                    rank: round.performances.length - round.performances.indexOf(performance),
+                  };
+                })
+                .filter(Boolean) as BandPerformance[],
+              rank: battle.rankedBands.length - battle.rankedBands.indexOf(band),
+              buzzAwarded,
+              newLevel,
+            });
+
+            // Award buzz based on placement, and update level.
+            band.buzz = newBuzz;
+            band.level = newLevel;
           });
-          battle.rankedBands.forEach(band => {
-            band.level = Math.min(levelCount, Math.max(0, Math.floor(Math.log10(band.buzz))));
-          });
-          battle.rankedBands = battle.rankedBands.map(band => ({ ...band }));
+
+          // Add a snapshot of each band to the battle data.
+          battle.rankedBands = bandSnapshot;
           return battle;
         }),
       };

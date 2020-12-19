@@ -59,6 +59,7 @@ export async function getBandGenerator(): Promise<Generator<Band>> {
         })),
         level,
         buzz: Math.pow(10, level),
+        battles: [],
       };
     },
   };
