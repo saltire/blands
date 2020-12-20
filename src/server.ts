@@ -7,6 +7,7 @@ import path from 'path';
 import { generateBattle, generateWeeks } from './battle';
 import { getBandNameGenerator, getSongNameGenerator } from './generator';
 import { init, test } from './db';
+import { createTables, testMammoth } from './mammoth';
 
 
 const app = new Koa();
@@ -45,6 +46,12 @@ app.use(router
   .get('/testDb', async ({ response }) => {
     await init();
     const data = await test();
+    response.body = JSON.stringify(data);
+    response.type = 'json';
+  })
+  .get('/testMammoth', async ({ response }) => {
+    await createTables();
+    const data = await testMammoth();
     response.body = JSON.stringify(data);
     response.type = 'json';
   })

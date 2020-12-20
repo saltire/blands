@@ -7,10 +7,10 @@ import Song from './models/song';
 import { range } from './utils';
 
 
-const { DATABASE_URL } = process.env;
+const connectionString = process.env.DATABASE_URL || '';
 
 export async function init() {
-  const sequelize = new Sequelize(DATABASE_URL || '', {
+  const sequelize = new Sequelize(connectionString, {
     dialectOptions: {
       ssl: { rejectUnauthorized: false },
     },
