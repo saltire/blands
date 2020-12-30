@@ -43,7 +43,8 @@ export async function createTables(dropTables?: boolean) {
 
       `CREATE TABLE IF NOT EXISTS battle (
         id serial NOT NULL PRIMARY KEY,
-        week_id integer NOT NULL REFERENCES week (id)
+        week_id integer NOT NULL REFERENCES week (id),
+        level integer NOT NULL
       );`,
 
       `CREATE TABLE IF NOT EXISTS entry (
@@ -118,9 +119,11 @@ export type Week = NewWeek & {
 const battle = defineTable({
   id: serial().notNull().primaryKey().default(`nextval('battle_id_seq')`),
   weekId: integer().notNull().references(week, 'id'),
+  level: integer().notNull(),
 });
 export type NewBattle = {
   weekId: number,
+  level: number,
 }
 export type Battle = NewBattle & {
   id: number,
@@ -134,12 +137,10 @@ const entry = defineTable({
   place: integer(),
   buzzAwarded: integer(),
 });
-export type NewEntry = {
+export type Entry = {
   battleId: number,
   bandId: number,
   buzzStart: number,
-}
-export type Entry = NewEntry & {
   place?: number,
   buzzAwarded?: number,
 }
@@ -194,11 +195,21 @@ interface BandBuzzUpdate {
   buzz: number,
   level: number,
 }
-export async function setBandBuzz({ bandId, ...update }: BandBuzzUpdate) {
-  return db
-    .update(db.band)
-    .set(update)
-    .where(db.band.id.eq(bandId));
+export async function setBandsBuzz(updates: BandBuzzUpdate[]) {
+  const valueParams = updates
+    .map((_, i) => {
+      const i3 = i * 3;
+      return i === 0 ? `($1::int, $2::int, $3::int)` :
+        `($${i3 + 1}, $${i3 + 2}, $${i3 + 3})`;
+    })
+    .join(', ');
+
+  return pool.query(
+    `UPDATE band
+      SET buzz = b.buzz, level = b.level
+      FROM (VALUES ${valueParams}) AS b(id, buzz, level)
+      WHERE band.id = b.id;`,
+    updates.flatMap(({ bandId, buzz, level }) => [bandId, buzz, level]));
 }
 
 export async function getBandsAtLevel(level: number): Promise<Band[]> {
@@ -214,11 +225,11 @@ export async function addNewSongs(newSongs: NewSong[]) {
     .values(newSongs);
 }
 
-export async function getBandSongs(bandId: number): Promise<Song[]> {
+export async function getBandsSongs(bandIds: number[]): Promise<Song[]> {
   return db
     .select(db.song.id, db.song.bandId, db.song.name)
     .from(db.song)
-    .where(db.song.bandId.eq(bandId));
+    .where(db.song.bandId.in(bandIds));
 }
 
 export async function addNewWeek(): Promise<number> {
@@ -230,33 +241,19 @@ export async function addNewWeek(): Promise<number> {
   return weeks[0].id;
 }
 
-export async function addNewBattle(battle: NewBattle): Promise<number> {
-  const battles = await db
+export async function addNewBattles(battles: NewBattle[]): Promise<number[]> {
+  const newBattles = await db
     .insertInto(db.battle)
-    .values(battle)
+    .values(battles)
     .returning('id');
 
-  return battles[0].id;
+  return newBattles.map(b => b.id);
 }
 
-export async function addNewEntries(entries: NewEntry[]) {
+export async function addNewEntries(entries: Entry[]) {
   return db
     .insertInto(db.entry)
     .values(entries);
-}
-
-interface EntryPlaceUpdate {
-  battleId: number,
-  bandId: number,
-  place: number,
-  buzzAwarded: number,
-}
-export async function setEntryPlace({ battleId, bandId, ...update }: EntryPlaceUpdate) {
-  return db
-    .update(db.entry)
-    .set(update)
-    .where(db.entry.battleId.eq(battleId)
-      .and(db.entry.bandId.eq(bandId)));
 }
 
 export async function addNewRounds(rounds: Round[]) {
