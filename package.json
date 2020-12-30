@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node built/index.js",
     "watch": "nodemon -x ts-node -- -r dotenv/config src/server.ts",
-    "build": "tsc -p server"
+    "build": "tsc"
   },
   "dependencies": {
     "@ff00ff/mammoth": "^1.2.0",

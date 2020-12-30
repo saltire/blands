@@ -2,6 +2,7 @@ import {
   Band, Song,
   addNewBands, setBandsBuzz, getBandsAtLevel, addNewSongs, getBandsSongs,
   addNewWeek, addNewBattles, addNewEntries, addNewPerformances, addNewRounds,
+  aggregateWeeks,
 } from './db';
 import { getBandGenerator, getSongNameGenerator } from './generator';
 import { mapSeries, pickOut, range, shuffle } from './utils';
@@ -166,4 +167,8 @@ export async function generateWeeks(options?: WeeksOptions) {
 
     return week;
   });
+}
+
+export async function getWeeks() {
+  return aggregateWeeks();
 }

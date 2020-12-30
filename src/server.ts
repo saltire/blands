@@ -6,7 +6,7 @@ import serveStatic from 'koa-static';
 import path from 'path';
 
 import { generateBattle, generateWeeks } from './battle';
-import { generateWeeks as generateWeeksDb } from './battleDb';
+import { generateWeeks as generateWeeksDb, getWeeks as getWeeksDb } from './battleDb';
 import { getBandNameGenerator, getSongNameGenerator } from './generator';
 import { createTables } from './db';
 
@@ -34,8 +34,24 @@ app.use(router
   .get('/', async (ctx) => {
     await ctx.render('weeks', { weeks: await generateWeeks() })
   })
-  .get('/battle', async ({ render }) => {
-    await render('battle', await generateBattle());
+  .get('/json', async ({ response }) => {
+    response.body = JSON.stringify({ weeks: await generateWeeks() });
+    response.type = 'json';
+  })
+  .get('/battle', async (ctx) => {
+    await ctx.render('battle', await generateBattle());
+  })
+  .get('/db', async (ctx) => {
+    await ctx.render('weeksDb', { weeks: await getWeeksDb() });
+  })
+  .get('/db/json', async ({ response }) => {
+    response.body = JSON.stringify({ weeks: await getWeeksDb() });
+    response.type = 'json';
+  })
+  .get('/db/reset', async (ctx) => {
+    await createTables(true);
+    await generateWeeksDb();
+    ctx.redirect('/db');
   })
   .get('/band', async ({ response }) => {
     const bandGen = await getBandNameGenerator();
@@ -44,12 +60,6 @@ app.use(router
   .get('/song', async ({ response }) => {
     const songGen = await getSongNameGenerator();
     response.body = songGen.generate();
-  })
-  .get('/testDb', async ({ response }) => {
-    await createTables(true);
-    const data = await generateWeeksDb();
-    response.body = JSON.stringify(data);
-    response.type = 'json';
   })
   .routes());
 

@@ -1,4 +1,6 @@
 import { date, defineDb, defineTable, integer, serial, text } from '@ff00ff/mammoth';
+import { promises as fs } from 'fs';
+import path from 'path';
 import { Pool } from 'pg';
 
 
@@ -266,4 +268,28 @@ export async function addNewPerformances(performances: Performance[]) {
   return db
     .insertInto(db.performance)
     .values(performances);
+}
+
+
+const weeksQuery = fs.readFile(path.resolve(__dirname, '../sql/weeks.sql'), { encoding: 'utf-8' });
+
+interface WeekSummary {
+  week_id: number,
+  levels: {
+    level: number,
+    battles: {
+      entries: {
+        place: number,
+        band_name: string,
+        band_color: string,
+        buzz_start: number,
+        buzz_final: number,
+      }[],
+    }[],
+  }[],
+}
+export async function aggregateWeeks(): Promise<WeekSummary[]> {
+  const { rows } = await pool.query(await weeksQuery);
+
+  return rows;
 }
