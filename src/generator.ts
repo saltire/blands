@@ -1,3 +1,4 @@
+import { NewBand } from './db';
 import { generateColor } from './color';
 import { readCsv, csvToMap } from './csv';
 import { Band } from './types';
@@ -41,7 +42,7 @@ interface BandGeneratorConfig extends GeneratorConfig {
   songCount?: number,
 }
 
-export async function getBandGenerator(): Promise<Generator<Band>> {
+export async function getBandAndSongGenerator(): Promise<Generator<Band>> {
   const [bandNameGen, songNameGen] = await Promise.all([
     getBandNameGenerator(),
     getSongNameGenerator(),
@@ -60,6 +61,23 @@ export async function getBandGenerator(): Promise<Generator<Band>> {
         level,
         buzz: Math.pow(10, level),
         battles: [],
+      };
+    },
+  };
+}
+
+export async function getBandGenerator(): Promise<Generator<NewBand>> {
+  const bandNameGen = await getBandNameGenerator();
+
+  return {
+    generate(config?: BandGeneratorConfig): NewBand {
+      const { level } = { level: 1, ...config };
+
+      return {
+        name: bandNameGen.generate(),
+        color: generateColor(),
+        level,
+        buzz: Math.pow(10, level),
       };
     },
   };

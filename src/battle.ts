@@ -1,4 +1,4 @@
-import { getBandGenerator } from './generator';
+import { getBandAndSongGenerator } from './generator';
 import { Band, Song, BandPerformance, Week, Battle } from './types';
 import { pick, pickOut, range, shuffle } from './utils';
 
@@ -36,7 +36,7 @@ function runBattle(bands: Band[]): Battle {
 }
 
 export async function generateBattle(battleSize: number = 5) {
-  const bandGen = await getBandGenerator();
+  const bandGen = await getBandAndSongGenerator();
 
   const bands: Band[] = range(battleSize)
     .map(() => bandGen.generate({ songCount: battleSize - 1 }));
@@ -48,19 +48,41 @@ function getBuzzAwarded(levelBaseBuzz: number, index: number) {
   return levelBaseBuzz * ([10, 5, 2.5][index] || 1);
 }
 
-function runWeek(bands: Band[], levelCount: number, battleSize: number): Week {
-  // For each battle at each level, pick bands at that level from the array.
-  // TODO: When picking, prioritize bands that placed top 3 in a battle last week.
-  // Run the battles.
+interface weeksOptions {
+  weekCount?: number;
+  maxLevel?: number;
+  battleSize?: number;
+}
 
-  // Halve each band's buzz without changing level.
-  bands.forEach(band => {
-    band.buzz = Math.floor(band.buzz / 2);
-  });
+export async function generateWeeks(options?: weeksOptions): Promise<Week[]> {
+  const { weekCount = 5, maxLevel = 5, battleSize = 5 } = options || {};
 
-  return {
-    levels: range(levelCount).map(l => {
-      const level = levelCount - l;
+  const bandGen = await getBandAndSongGenerator();
+
+  const bands: Band[] = [];
+
+  return range(weekCount).map(() => {
+    range(maxLevel).forEach(l => {
+      const level = l + 1;
+      const battleCount = maxLevel - l;
+      const bandCount = battleCount * battleSize;
+      const levelBands = bands.filter(b => b.level === level);
+      range(Math.max(0, bandCount - levelBands.length)).forEach(() => {
+        bands.push(bandGen.generate({ level, songCount: battleSize - 1 }));
+      });
+    });
+
+    // For each battle at each level, pick bands at that level from the array.
+    // TODO: When picking, prioritize bands that placed top 3 in a battle last week.
+    // Run the battles.
+
+    // Halve each band's buzz without changing level.
+    bands.forEach(band => {
+      band.buzz = Math.floor(band.buzz / 2);
+    });
+
+    const weekLevels = range(maxLevel).map(l => {
+      const level = maxLevel - l;
       const levelBaseBuzz = Math.pow(10, level);
       const levelBands = bands.filter(b => b.level === level);
       return {
@@ -76,7 +98,7 @@ function runWeek(bands: Band[], levelCount: number, battleSize: number): Week {
             const rankedIndex = battle.rankedBands.indexOf(band);
             const buzzAwarded = getBuzzAwarded(levelBaseBuzz, rankedIndex);
             const newBuzz = band.buzz + buzzAwarded;
-            const newLevel = Math.min(levelCount, Math.max(0, Math.floor(Math.log10(newBuzz))));
+            const newLevel = Math.min(maxLevel, Math.max(0, Math.floor(Math.log10(newBuzz))));
 
             // Add a summary of the battle to the band data.
             band.battles.push({
@@ -107,28 +129,8 @@ function runWeek(bands: Band[], levelCount: number, battleSize: number): Week {
           return battle;
         }),
       };
-    }),
-  };
-}
-
-export async function generateWeeks(weekCount: number = 1) {
-  const bandGen = await getBandGenerator();
-
-  const levelCount = 5;
-  const battleSize = 5;
-  const bands: Band[] = [];
-
-  return range(weekCount).map(() => {
-    range(levelCount).forEach(l => {
-      const level = l + 1;
-      const battleCount = levelCount - l;
-      const bandCount = battleCount * battleSize;
-      const levelBands = bands.filter(b => b.level === level);
-      range(Math.max(0, bandCount - levelBands.length)).forEach(() => {
-        bands.push(bandGen.generate({ level, songCount: battleSize - 1 }));
-      });
     });
 
-    return runWeek(bands, levelCount, battleSize);
+    return { levels: weekLevels };
   });
 }

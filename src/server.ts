@@ -1,15 +1,18 @@
 import Koa from 'koa';
 import Router from '@koa/router';
+import logger from 'koa-logger';
 import render from 'koa-ejs';
 import serveStatic from 'koa-static';
 import path from 'path';
 
 import { generateBattle, generateWeeks } from './battle';
+import { generateWeeks as generateWeeksDb } from './battleDb';
 import { getBandNameGenerator, getSongNameGenerator } from './generator';
-import { createTables, testMammoth } from './db';
+import { createTables } from './db';
 
 
 const app = new Koa();
+app.use(logger());
 const router = new Router();
 render(app, {
   layout: false,
@@ -29,7 +32,7 @@ app.use(async ({ response }, next) => {
 
 app.use(router
   .get('/', async (ctx) => {
-    await ctx.render('weeks', { weeks: await generateWeeks(5) })
+    await ctx.render('weeks', { weeks: await generateWeeks() })
   })
   .get('/battle', async ({ render }) => {
     await render('battle', await generateBattle());
@@ -42,9 +45,9 @@ app.use(router
     const songGen = await getSongNameGenerator();
     response.body = songGen.generate();
   })
-  .get('/testMammoth', async ({ response }) => {
-    await createTables();
-    const data = await testMammoth();
+  .get('/testDb', async ({ response }) => {
+    await createTables(true);
+    const data = await generateWeeksDb();
     response.body = JSON.stringify(data);
     response.type = 'json';
   })
