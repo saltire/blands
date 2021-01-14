@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model band {
+  id          Int           @id @default(autoincrement())
+  name        String
+  color       String
+  buzz        Int           @default(0)
+  level       Int           @default(1)
+  entry       entry[]
+  performance performance[]
+  song        song[]
+}
+
+model battle {
+  id      Int     @id @default(autoincrement())
+  week_id Int
+  level   Int
+  week    week    @relation(fields: [week_id], references: [id])
+  entry   entry[]
+  round   round[]
+}
+
+model entry {
+  battle_id    Int
+  band_id      Int
+  buzz_start   Int
+  place        Int?
+  buzz_awarded Int?
+  band         band   @relation(fields: [band_id], references: [id])
+  battle       battle @relation(fields: [battle_id], references: [id])
+
+  @@id([battle_id, band_id])
+}
+
+model performance {
+  battle_id   Int
+  round_index Int
+  band_id     Int
+  song_id     Int
+  score       Int
+  band        band  @relation(fields: [band_id], references: [id])
+  round       round @relation(fields: [battle_id, round_index], references: [battle_id, index])
+  song        song  @relation(fields: [song_id], references: [id])
+
+  @@id([battle_id, round_index, band_id])
+}
+
+model round {
+  battle_id   Int
+  index       Int           @default(autoincrement())
+  battle      battle        @relation(fields: [battle_id], references: [id])
+  performance performance[]
+
+  @@id([battle_id, index])
+}
+
+model song {
+  id          Int           @id @default(autoincrement())
+  band_id     Int
+  name        String
+  band        band          @relation(fields: [band_id], references: [id])
+  performance performance[]
+}
+
+model week {
+  id     Int      @id @default(autoincrement())
+  battle battle[]
+}

@@ -12,6 +12,7 @@
   "dependencies": {
     "@ff00ff/mammoth": "^1.2.0",
     "@koa/router": "^10.0.0",
+    "@prisma/client": "^2.14.0",
     "koa": "^2.13.0",
     "koa-ejs": "^4.3.0",
     "koa-logger": "^3.2.1",
@@ -19,6 +20,7 @@
     "pg": "^8.5.1"
   },
   "devDependencies": {
+    "@prisma/cli": "^2.14.0",
     "@types/koa": "^2.11.6",
     "@types/koa-ejs": "^4.2.2",
     "@types/koa-logger": "^3.1.1",

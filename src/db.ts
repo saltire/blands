@@ -272,6 +272,8 @@ export async function addNewPerformances(performances: Performance[]) {
 
 
 const weeksQuery = fs.readFile(path.resolve(__dirname, '../sql/weeks.sql'), { encoding: 'utf-8' });
+const weeksQuerySimple = fs.readFile(path.resolve(__dirname, '../sql/weeksSimple.sql'),
+  { encoding: 'utf-8' });
 
 interface WeekSummary {
   week_id: number,
@@ -290,6 +292,23 @@ interface WeekSummary {
 }
 export async function aggregateWeeks(): Promise<WeekSummary[]> {
   const { rows } = await pool.query(await weeksQuery);
+  return rows;
+}
 
+interface WeekSummarySimple {
+  week_id: number,
+  battles: {
+    level: number,
+    entries: {
+      place: number,
+      band_name: string,
+      band_color: string,
+      buzz_start: number,
+      buzz_final: number,
+    }[],
+  }[],
+}
+export async function aggregateWeeksSimple(): Promise<WeekSummarySimple[]> {
+  const { rows } = await pool.query(await weeksQuerySimple);
   return rows;
 }
