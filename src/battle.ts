@@ -8,7 +8,7 @@ function runBattle(bands: Band[]): Battle {
   const performedSongs = new Set<Song>();
 
   const rounds = range(bands.length - 1).map(() => {
-    const performances = shuffle(bands.filter(b => !rankedBands.includes(b))).map((band) => {
+    const performances = shuffle(bands.filter(b => !rankedBands.includes(b))).map(band => {
       const song = pick(band.songs.filter(s => !performedSongs.has(s)));
       performedSongs.add(song);
       return {
@@ -77,13 +77,11 @@ export async function generateWeeks(options?: weeksOptions): Promise<Week[]> {
     // Run the battles.
 
     // Halve each band's buzz without changing level.
-    bands.forEach(band => {
-      band.buzz = Math.floor(band.buzz / 2);
-    });
+    bands.forEach(band => Object.assign(band, { buzz: Math.floor(band.buzz / 2) }));
 
     const weekLevels = range(maxLevel).map(l => {
       const level = maxLevel - l;
-      const levelBaseBuzz = Math.pow(10, level);
+      const levelBaseBuzz = 10 ** level;
       const levelBands = bands.filter(b => b.level === level);
       return {
         level,
@@ -120,8 +118,7 @@ export async function generateWeeks(options?: weeksOptions): Promise<Week[]> {
             });
 
             // Award buzz based on placement, and update level.
-            band.buzz = newBuzz;
-            band.level = newLevel;
+            Object.assign(band, { buzz: newBuzz, level: newLevel });
           });
 
           // Add a snapshot of each band to the battle data.

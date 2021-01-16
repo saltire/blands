@@ -29,7 +29,7 @@ export async function generateWeeks(options?: WeeksOptions) {
   const bandGen = await getBandGenerator();
   const songNameGen = await getSongNameGenerator();
 
-  const weeks = await mapSeries(range(weekCount), async () => {
+  return mapSeries(range(weekCount), async () => {
     const weekId = await addNewWeek();
 
     // For each battle at each level, pick bands at that level from the array.
@@ -70,7 +70,7 @@ export async function generateWeeks(options?: WeeksOptions) {
     await setBandsBuzz(enteredBandsByLevel
       .flatMap(levelEnteredBands => levelEnteredBands.map(band => {
         // Mutate each band object, and also update it in the db.
-        band.buzz = Math.floor(band.buzz / 2);
+        Object.assign(band, { buzz: Math.floor(band.buzz / 2) });
         return {
           bandId: band.id,
           buzz: band.buzz,
@@ -81,7 +81,7 @@ export async function generateWeeks(options?: WeeksOptions) {
     // Run the battles.
     const week = await Promise.all(range(maxLevel).map(async l => {
       const level = maxLevel - l;
-      const levelBaseBuzz = Math.pow(10, level);
+      const levelBaseBuzz = 10 ** level;
 
       const levelEnteredBands = enteredBandsByLevel[l];
       const battleCount = Math.ceil(levelEnteredBands.length / battleSize);
@@ -105,10 +105,10 @@ export async function generateWeeks(options?: WeeksOptions) {
         const songsByBand = new Map<Band, Song[]>(
           battleBands.map(band => [band, songs.filter(song => song.bandId === band.id)]));
 
-        const performances = range(battleBands.length - 1).flatMap((index) => {
+        const performances = range(battleBands.length - 1).flatMap(index => {
           // Create a performance for each surviving band, in random order.
           // TODO: store performances in a table, with reference to entry.
-          const roundPerformances = shuffle(battleBands).map((band) => {
+          const roundPerformances = shuffle(battleBands).map(band => {
             // Pick a song that hasn't been performed yet.
             const song = pickOut(songsByBand.get(band) as Song[]) as Song;
             // Assign a random score to the performance.

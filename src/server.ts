@@ -32,24 +32,24 @@ app.use(async ({ response }, next) => {
 });
 
 app.use(router
-  .get('/', async (ctx) => {
-    await ctx.render('weeks', { weeks: await generateWeeks() })
+  .get('/', async ctx => {
+    await ctx.render('weeks', { weeks: await generateWeeks() });
   })
   .get('/json', async ({ response }) => {
     response.body = JSON.stringify({ weeks: await generateWeeks() });
     response.type = 'json';
   })
-  .get('/battle', async (ctx) => {
+  .get('/battle', async ctx => {
     await ctx.render('battle', await generateBattle());
   })
-  .get('/db', async (ctx) => {
+  .get('/db', async ctx => {
     await ctx.render('weeksDb', { weeks: await getWeeksDb() });
   })
   .get('/db/json', async ({ response }) => {
     response.body = JSON.stringify({ weeks: await getWeeksSimple() });
     response.type = 'json';
   })
-  .get('/db/reset', async (ctx) => {
+  .get('/db/reset', async ctx => {
     await createTables(true);
     await generateWeeksDb();
     ctx.redirect('/db');

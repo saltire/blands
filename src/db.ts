@@ -72,13 +72,13 @@ export async function createTables(dropTables?: boolean) {
         score integer NOT NULL,
         FOREIGN KEY (battle_id, round_index) REFERENCES round (battle_id, index),
         PRIMARY KEY (battle_id, round_index, band_id)
-      )`
+      )`,
     ].join(''));
 }
 
 
 const band = defineTable({
-  id: serial().notNull().primaryKey().default(`nextval('band_id_seq')`),
+  id: serial().notNull().primaryKey().default("nextval('band_id_seq')"),
   name: text().notNull(),
   color: text().notNull(),
   buzz: integer().notNull().default('0'),
@@ -95,7 +95,7 @@ export type Band = NewBand & {
 }
 
 const song = defineTable({
-  id: serial().notNull().primaryKey().default(`nextval('song_id_seq')`),
+  id: serial().notNull().primaryKey().default("nextval('song_id_seq')"),
   bandId: integer().notNull().references(band, 'id'),
   name: text().notNull(),
 });
@@ -108,7 +108,7 @@ export type Song = NewSong & {
 }
 
 const week = defineTable({
-  id: serial().notNull().primaryKey().default(`nextval('week_id_seq')`),
+  id: serial().notNull().primaryKey().default("nextval('week_id_seq')"),
   date: date(),
 });
 export type NewWeek = {
@@ -119,7 +119,7 @@ export type Week = NewWeek & {
 }
 
 const battle = defineTable({
-  id: serial().notNull().primaryKey().default(`nextval('battle_id_seq')`),
+  id: serial().notNull().primaryKey().default("nextval('battle_id_seq')"),
   weekId: integer().notNull().references(week, 'id'),
   level: integer().notNull(),
 });
@@ -149,7 +149,7 @@ export type Entry = {
 
 const round = defineTable({
   battleId: integer().notNull().references(battle, 'id'),
-  index: serial().notNull().default(`nextval('round_index_seq')`),
+  index: serial().notNull().default("nextval('round_index_seq')"),
 });
 export type Round = {
   battleId: number,
@@ -201,7 +201,7 @@ export async function setBandsBuzz(updates: BandBuzzUpdate[]) {
   const valueParams = updates
     .map((_, i) => {
       const i3 = i * 3;
-      return i === 0 ? `($1::int, $2::int, $3::int)` :
+      return i === 0 ? '($1::int, $2::int, $3::int)' :
         `($${i3 + 1}, $${i3 + 2}, $${i3 + 3})`;
     })
     .join(', ');
@@ -271,6 +271,8 @@ export async function addNewPerformances(performances: Performance[]) {
 }
 
 
+/* eslint-disable camelcase */
+
 const weeksQuery = fs.readFile(path.resolve(__dirname, '../sql/weeks.sql'), { encoding: 'utf-8' });
 const weeksQuerySimple = fs.readFile(path.resolve(__dirname, '../sql/weeksSimple.sql'),
   { encoding: 'utf-8' });
@@ -296,15 +298,17 @@ export async function aggregateWeeks(): Promise<WeekSummary[]> {
 }
 
 interface WeekSummarySimple {
-  week_id: number,
+  id: number,
   battles: {
     level: number,
     entries: {
       place: number,
-      band_name: string,
-      band_color: string,
       buzz_start: number,
-      buzz_final: number,
+      buzz_awarded: number,
+      band: {
+        name: string,
+        color: string,
+      },
     }[],
   }[],
 }

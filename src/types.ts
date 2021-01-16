@@ -1,14 +1,11 @@
-export type Band = {
-  name: string,
-  color: string,
-  songs: Song[],
-  level: number,
-  buzz: number,
-  battles: BandBattle[],
-};
-
 export type Song = {
   name: string,
+};
+
+export type BandPerformance = {
+  song: Song,
+  score: number,
+  rank: number,
 };
 
 export type BandBattle = {
@@ -20,10 +17,29 @@ export type BandBattle = {
   newLevel: number,
 };
 
-export type BandPerformance = {
+export type Band = {
+  name: string,
+  color: string,
+  songs: Song[],
+  level: number,
+  buzz: number,
+  battles: BandBattle[],
+};
+
+export type Performance = {
+  band: Band,
   song: Song,
   score: number,
-  rank: number,
+};
+
+export type Round = {
+  performances: Performance[],
+  eliminee: Band,
+};
+
+export type Battle = {
+  rounds: Round[],
+  rankedBands: Band[],
 };
 
 export type Week = {
@@ -32,20 +48,4 @@ export type Week = {
     bands: Band[],
     battles: Battle[],
   }[],
-};
-
-export type Battle = {
-  rounds: Round[],
-  rankedBands: Band[],
-};
-
-export type Round = {
-  performances: Performance[],
-  eliminee: Band,
-};
-
-export type Performance = {
-  band: Band,
-  song: Song,
-  score: number,
 };

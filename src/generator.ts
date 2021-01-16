@@ -11,7 +11,8 @@ export interface Generator<T> {
   generate: (config?: GeneratorConfig) => T,
 }
 
-export async function getGenerator(csvPath: string, capitalize?: boolean): Promise<Generator<string>> {
+export async function getGenerator(csvPath: string, capitalize?: boolean):
+Promise<Generator<string>> {
   const map = await readCsv(csvPath).then(csvToMap);
 
   return {
@@ -59,7 +60,7 @@ export async function getBandAndSongGenerator(): Promise<Generator<Band>> {
           name: songNameGen.generate(),
         })),
         level,
-        buzz: Math.pow(10, level),
+        buzz: 10 ** level,
         battles: [],
       };
     },
@@ -77,7 +78,7 @@ export async function getBandGenerator(): Promise<Generator<NewBand>> {
         name: bandNameGen.generate(),
         color: generateColor(),
         level,
-        buzz: Math.pow(10, level),
+        buzz: 10 ** level,
       };
     },
   };
