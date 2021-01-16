@@ -7,14 +7,14 @@ const prisma = new PrismaClient();
 export async function getWeeks() {
   return prisma.week.findMany({
     include: {
-      battle: {
+      battles: {
         select: {
           level: true,
-          entry: {
+          entries: {
             select: {
               place: true,
-              buzz_start: true,
-              buzz_awarded: true,
+              buzzStart: true,
+              buzzAwarded: true,
               band: {
                 select: {
                   name: true,
