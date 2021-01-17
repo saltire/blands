@@ -1,12 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;450;600;750;900&display=swap');
+
 body {
   background: black;
   color: white;
-  font-family: sans-serif;
+  font-family: Jost, sans-serif;
+  font-weight: 300;
   overflow-x: scroll;
 }
 
 h1, h2, h3 {
   margin: 2rem 0 1rem;
+}
+
+h1 {
+  font-weight: 900;
+}
+
+h2 {
+  font-weight: 750;
+}
+
+h3 {
+  font-weight: 600;
+}
+
+h4 {
+  font-weight: 450;
 }
 
 .pad {
@@ -16,6 +35,11 @@ h1, h2, h3 {
 p {
   margin: 0 1rem 0 0;
   white-space: nowrap;
+}
+
+input, button {
+  font-family: inherit;
+  font-weight: inherit;
 }
 
 .flex {
