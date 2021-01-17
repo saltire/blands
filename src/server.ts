@@ -1,8 +1,6 @@
-import Koa from 'koa';
-import Router from '@koa/router';
-import logger from 'koa-logger';
-import render from 'koa-ejs';
-import serveStatic from 'koa-static';
+import express, { Request, Response, NextFunction } from 'express';
+import Router from 'express-promise-router';
+import morgan from 'morgan';
 import path from 'path';
 
 import { generateBattle, generateWeeks } from './battle';
@@ -12,73 +10,69 @@ import { createTables } from './db';
 import { getWeeks as getWeeksPrisma } from './prisma';
 
 
-const app = new Koa();
-app.use(logger());
-const router = new Router();
-render(app, {
-  layout: false,
-  root: path.resolve(__dirname, '../views'),
-  viewExt: 'ejs',
+const app = express();
+
+app.use(morgan('dev'));
+app.set('view engine', 'ejs');
+app.set('views', path.resolve(__dirname, '../views'));
+
+const router = Router();
+
+router.get('/', async (req, res) => {
+  res.render('weeks', { weeks: await generateWeeks() });
+});
+router.get('/json', async (req, res) => {
+  res.json({ weeks: await generateWeeks() });
+});
+router.get('/battle', async (req, res) => {
+  res.render('battle', await generateBattle());
+});
+router.get('/battle/json', async (req, res) => {
+  res.json(await generateBattle());
 });
 
-app.use(async ({ response }, next) => {
-  await next()
-    .catch(err => {
-      console.error('Unhandled error:', err.stack);
-
-      response.status = err.statusCode || err.status || 500;
-      response.body = err.message;
-    });
+router.get('/db', async (req, res) => {
+  res.render('weeksDb', { weeks: await getWeeksSimple() });
+});
+router.get('/db/json', async (req, res) => {
+  res.json({ weeks: await getWeeksSimple() });
+});
+router.get('/db/reset', async (req, res) => {
+  await createTables(true);
+  await generateWeeksDb();
+  res.redirect('/db');
+});
+router.post('/db/addWeek', async (req, res) => {
+  await generateWeeksDb({ weekCount: 1 });
+  res.redirect('/db');
+});
+router.post('/db/clear', async (req, res) => {
+  await createTables(true);
+  // await clearTables();
+  res.redirect('/db');
 });
 
-app.use(router
-  .get('/', async ctx => {
-    await ctx.render('weeks', { weeks: await generateWeeks() });
-  })
-  .get('/json', async ({ response }) => {
-    response.body = JSON.stringify({ weeks: await generateWeeks() });
-    response.type = 'json';
-  })
-  .get('/battle', async ctx => {
-    await ctx.render('battle', await generateBattle());
-  })
-  .get('/db', async ctx => {
-    await ctx.render('weeksDb', { weeks: await getWeeksSimple() });
-  })
-  .get('/db/json', async ({ response }) => {
-    response.body = JSON.stringify({ weeks: await getWeeksSimple() });
-    response.type = 'json';
-  })
-  .get('/db/reset', async ctx => {
-    await createTables(true);
-    await generateWeeksDb();
-    ctx.redirect('/db');
-  })
-  .post('/db/addWeek', async ({ response }) => {
-    await generateWeeksDb({ weekCount: 1 });
-    response.redirect('/db');
-  })
-  .post('/db/clear', async ({ response }) => {
-    await createTables(true);
-    // await clearTables();
-    response.redirect('/db');
-  })
-  .get('/band', async ({ response }) => {
-    const bandGen = await getBandNameGenerator();
-    response.body = bandGen.generate();
-  })
-  .get('/song', async ({ response }) => {
-    const songGen = await getSongNameGenerator();
-    response.body = songGen.generate();
-  })
-  .get('/prisma/json', async ({ response }) => {
-    response.body = JSON.stringify({ weeks: await getWeeksPrisma() });
-    response.type = 'json';
-  })
-  .routes());
+router.get('/band', async (req, res) => {
+  const bandGen = await getBandNameGenerator();
+  res.send(bandGen.generate());
+});
+router.get('/song', async (req, res) => {
+  const songGen = await getSongNameGenerator();
+  res.send(songGen.generate());
+});
 
-app.use(serveStatic(path.resolve(__dirname, '../static')));
+router.get('/prisma/json', async (req, res) => {
+  res.json({ weeks: await getWeeksPrisma() });
+});
+
+app.use(router);
+app.use(express.static(path.resolve(__dirname, '../static')));
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  console.error('Unhandled error:', err);
+  res.status(500).send(err.message);
+});
 
 const port = Number(process.env.PORT) || 8000;
-console.log('Listening on port', port);
-app.listen({ port });
+app.listen(port, () => console.log(`Listening on port ${port}.`));
