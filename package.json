@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@ff00ff/mammoth": "^1.2.0",
-    "@prisma/client": "^2.14.0",
     "ejs": "^3.1.5",
     "express": "^4.17.1",
     "express-promise-router": "^4.0.1",
@@ -20,7 +19,6 @@
     "pg": "^8.5.1"
   },
   "devDependencies": {
-    "@prisma/cli": "^2.14.0",
     "@types/express": "^4.17.11",
     "@types/koa-static": "^4.0.1",
     "@types/morgan": "^1.9.2",

@@ -6,35 +6,33 @@
     <link rel='stylesheet' href='/style.css'>
   </head>
   <body>
+    <header>
+      <form action='/addWeek' method='post'>
+        <input type='submit' value='Next week'>
+      </form>
+      <form action='/clear' method='post'>
+        <input type='submit' value='Reset'>
+      </form>
+    </header>
     <div class='flex'>
       <% weeks.forEach((week, w) => { %>
         <div>
-          <h1>Week <%= w + 1 %></h1>
-          <div class='flex'>
-            <div>
-              <% week.levels.forEach((level) => { %>
-                <h2>Level <%= level.level %></h2>
-                <div class='flex'>
-                  <div>
-                    <h2>Bands</h2>
-                    <% level.bands.sort((a, b) => b.buzz - a.buzz).forEach((band) => { %>
-                      <p><%- include('band', { band }) %> - <%= band.buzz %></p>
-                    <% }); %>
-                  </div>
-                  <div>
-                    <h2>Battles</h2>
-                    <% level.battles.forEach((battle, b) => { %>
-                      <div class='pad'>
-                        <% battle.rankedBands.forEach((band) => { %>
-                          <p><%- include('band', { band }) %> - <%= band.buzz %> (<%= band.level %>)</p>
-                        <% }); %>
-                      </div>
-                    <% }); %>
-                  </div>
-                </div>
+          <h1>Week <%= week.id %></h1>
+
+          <h2>Top 10 Bands</h2>
+          <% week.top_bands.forEach((band) => { %>
+            <p><%= band.rank %>. <%- include('band', { band }) %> - <%= band.buzz %></p>
+          <% }); %>
+
+          <h2>Battles</h2>
+          <% week.battles.forEach((battle, b) => { %>
+            <h4>Level <%= battle.level %></h4>
+            <div class='pad'>
+              <% battle.entries.forEach((entry) => { %>
+                <p><%- include('band', { band: entry.band }) %> - <%= entry.buzz_start + entry.buzz_awarded %></p>
               <% }); %>
             </div>
-          </div>
+          <% }); %>
         </div>
       <% }); %>
     </div>

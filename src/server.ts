@@ -3,11 +3,9 @@ import Router from 'express-promise-router';
 import morgan from 'morgan';
 import path from 'path';
 
-import { generateBattle, generateWeeks } from './battle';
-import { generateWeeks as generateWeeksDb } from './battleDb';
-import { getBandNameGenerator, getSongNameGenerator } from './generator';
+import { generateWeeks } from './battle';
 import { createTables, aggregateWeeksSimple, getBattleSummary } from './db';
-import { getWeeks as getWeeksPrisma } from './prisma';
+import { getBandNameGenerator, getSongNameGenerator } from './generator';
 
 
 const app = express();
@@ -19,43 +17,24 @@ app.set('views', path.resolve(__dirname, '../views'));
 const router = Router();
 
 router.get('/', async (req, res) => {
-  res.render('weeks', { weeks: await generateWeeks() });
+  res.render('weeks', { weeks: await aggregateWeeksSimple() });
 });
 router.get('/json', async (req, res) => {
-  res.json({ weeks: await generateWeeks() });
-});
-router.get('/battle', async (req, res) => {
-  res.render('battle', { battle: await generateBattle() });
-});
-router.get('/battle/json', async (req, res) => {
-  res.json({ battle: await generateBattle() });
-});
-
-router.get('/db', async (req, res) => {
-  res.render('weeksDb', { weeks: await aggregateWeeksSimple() });
-});
-router.get('/db/json', async (req, res) => {
   res.json({ weeks: await aggregateWeeksSimple() });
 });
-router.get('/db/battle/:id', async (req, res) => {
+router.get('/battle/:id', async (req, res) => {
   res.render('battle', { battle: await getBattleSummary(Number(req.params.id)) });
 });
-router.get('/db/battle/:id/json', async (req, res) => {
+router.get('/battle/:id/json', async (req, res) => {
   res.json({ battle: await getBattleSummary(Number(req.params.id)) });
 });
-router.get('/db/reset', async (req, res) => {
-  await createTables(true);
-  await generateWeeksDb();
-  res.redirect('/db');
+router.post('/addWeek', async (req, res) => {
+  await generateWeeks({ weekCount: 1 });
+  res.redirect('/');
 });
-router.post('/db/addWeek', async (req, res) => {
-  await generateWeeksDb({ weekCount: 1 });
-  res.redirect('/db');
-});
-router.post('/db/clear', async (req, res) => {
+router.post('/clear', async (req, res) => {
   await createTables(true);
-  // await clearTables();
-  res.redirect('/db');
+  res.redirect('/');
 });
 
 router.get('/band', async (req, res) => {
@@ -65,10 +44,6 @@ router.get('/band', async (req, res) => {
 router.get('/song', async (req, res) => {
   const songGen = await getSongNameGenerator();
   res.send(songGen.generate());
-});
-
-router.get('/prisma/json', async (req, res) => {
-  res.json({ weeks: await getWeeksPrisma() });
 });
 
 app.use(router);
