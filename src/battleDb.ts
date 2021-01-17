@@ -2,7 +2,7 @@ import {
   Band, Song,
   addNewBands, setBandsBuzz, getBandsAtLevel, addNewSongs, getBandsSongs,
   addNewWeek, addNewBattles, addNewEntries, addNewPerformances, addNewRounds,
-  aggregateWeeks, aggregateWeeksSimple,
+  aggregateWeeks, aggregateWeeksSimple, setWeeklyBuzz,
 } from './db';
 import { getBandGenerator, getSongNameGenerator } from './generator';
 import { mapSeries, pickOut, range, shuffle } from './utils';
@@ -162,7 +162,8 @@ export async function generateWeeks(options?: WeeksOptions) {
     await Promise.all([
       addNewEntries(week.flatMap(level => level.flatMap(battle => battle.entries))),
       addNewPerformances(week.flatMap(level => level.flatMap(battle => battle.performances))),
-      setBandsBuzz(week.flatMap(level => level.flatMap(battle => battle.bandUpdates))),
+      setBandsBuzz(week.flatMap(level => level.flatMap(battle => battle.bandUpdates)))
+        .then(() => setWeeklyBuzz(weekId)),
     ]);
 
     return week;

@@ -1,7 +1,7 @@
 import { date, defineDb, defineTable, integer, serial, text } from '@ff00ff/mammoth';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { Pool } from 'pg';
+import { Pool, QueryResult } from 'pg';
 
 
 const connectionString = `${process.env.DATABASE_URL || ''}`;
@@ -10,6 +10,19 @@ const pool = new Pool({
   connectionString,
   ssl: { rejectUnauthorized: false },
 });
+
+
+// Get SQL queries from files.
+const sqlDir = path.resolve(__dirname, '../sql');
+const queries = fs.readdir(sqlDir)
+  .then(async files => Object.fromEntries(await Promise.all(files
+    .map(async file => [
+      file.replace(/\.sql$/, ''),
+      await fs.readFile(path.join(sqlDir, file), { encoding: 'utf-8' }),
+    ]))));
+
+const runQuery = async (queryName: string, values?: any[]): Promise<QueryResult> => (
+  pool.query((await queries)[queryName], values));
 
 
 // Define tables, manually for now.
@@ -41,6 +54,13 @@ export async function createTables(dropTables?: boolean) {
 
       `CREATE TABLE IF NOT EXISTS week (
         id serial NOT NULL PRIMARY KEY
+      );`,
+
+      `CREATE TABLE IF NOT EXISTS weekly_buzz (
+        week_id integer NOT NULL REFERENCES week (id),
+        band_id integer NOT NULL REFERENCES band (id),
+        buzz integer NOT NULL DEFAULT 0,
+        PRIMARY KEY (week_id, band_id)
       );`,
 
       `CREATE TABLE IF NOT EXISTS battle (
@@ -219,6 +239,10 @@ export async function setBandsBuzz(updates: BandBuzzUpdate[]) {
     updates.flatMap(({ bandId, buzz, level }) => [bandId, buzz, level]));
 }
 
+export async function setWeeklyBuzz(weekId: number) {
+  return runQuery('setWeeklyBuzz', [weekId]);
+}
+
 export async function getBandsAtLevel(level: number): Promise<Band[]> {
   return db
     .select(db.band.id, db.band.name, db.band.color, db.band.buzz, db.band.level)
@@ -278,10 +302,6 @@ export async function addNewPerformances(performances: Performance[]) {
 
 /* eslint-disable camelcase */
 
-const weeksQuery = fs.readFile(path.resolve(__dirname, '../sql/weeks.sql'), { encoding: 'utf-8' });
-const weeksQuerySimple = fs.readFile(path.resolve(__dirname, '../sql/weeksSimple.sql'),
-  { encoding: 'utf-8' });
-
 interface WeekSummary {
   week_id: number,
   levels: {
@@ -298,12 +318,16 @@ interface WeekSummary {
   }[],
 }
 export async function aggregateWeeks(): Promise<WeekSummary[]> {
-  const { rows } = await pool.query(await weeksQuery);
+  const { rows } = await runQuery('weeks');
   return rows;
 }
 
 interface WeekSummarySimple {
   id: number,
+  top_bands: {
+    name: string,
+    buzz: number,
+  }[],
   battles: {
     level: number,
     entries: {
@@ -318,6 +342,6 @@ interface WeekSummarySimple {
   }[],
 }
 export async function aggregateWeeksSimple(): Promise<WeekSummarySimple[]> {
-  const { rows } = await pool.query(await weeksQuerySimple);
+  const { rows } = await runQuery('weeksSimple');
   return rows;
 }

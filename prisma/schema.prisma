@@ -1,4 +1,6 @@
-// Updated using prisma-schema-transformer
+// Generate this file: npx prisma introspect
+// Format: npx prisma-schema-transformer [path to this file]
+// Generate client: npx prisma generate
 
 datasource db {
   provider = "postgresql"
@@ -85,4 +87,13 @@ model Week {
   battles Battle[] @relation(name: "battleToweek")
 
   @@map("week")
+}
+
+model WeeklyBuzz {
+  weekId Int @map("week_id")
+  bandId Int @map("band_id")
+  buzz   Int
+
+  @@id([weekId, bandId])
+  @@map("weekly_buzz")
 }

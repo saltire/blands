@@ -59,6 +59,7 @@ app.use(router
     response.redirect('/db');
   })
   .post('/db/clear', async ({ response }) => {
+    // await createTables(true);
     await clearTables();
     response.redirect('/db');
   })
