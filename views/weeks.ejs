@@ -18,7 +18,7 @@
                   <div>
                     <h2>Bands</h2>
                     <% level.bands.sort((a, b) => b.buzz - a.buzz).forEach((band) => { %>
-                      <p><span style='color: <%= band.color %>'><%= band.name %></span> - <%= band.buzz %></p>
+                      <p><%- include('band', { band }) %> - <%= band.buzz %></p>
                     <% }); %>
                   </div>
                   <div>
@@ -26,7 +26,7 @@
                     <% level.battles.forEach((battle, b) => { %>
                       <div class='pad'>
                         <% battle.rankedBands.forEach((band) => { %>
-                          <p><span style='color: <%= band.color %>'><%= band.name %></span> - <%= band.buzz %> (<%= band.level %>)</p>
+                          <p><%- include('band', { band }) %> - <%= band.buzz %> (<%= band.level %>)</p>
                         <% }); %>
                       </div>
                     <% }); %>

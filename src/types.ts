@@ -39,7 +39,7 @@ export type Round = {
 
 export type Battle = {
   rounds: Round[],
-  rankedBands: Band[],
+  bands: Band[],
 };
 
 export type Week = {

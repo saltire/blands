@@ -4,9 +4,9 @@ import morgan from 'morgan';
 import path from 'path';
 
 import { generateBattle, generateWeeks } from './battle';
-import { generateWeeks as generateWeeksDb, getWeeksSimple } from './battleDb';
+import { generateWeeks as generateWeeksDb } from './battleDb';
 import { getBandNameGenerator, getSongNameGenerator } from './generator';
-import { createTables } from './db';
+import { createTables, aggregateWeeksSimple, getBattleSummary } from './db';
 import { getWeeks as getWeeksPrisma } from './prisma';
 
 
@@ -25,17 +25,23 @@ router.get('/json', async (req, res) => {
   res.json({ weeks: await generateWeeks() });
 });
 router.get('/battle', async (req, res) => {
-  res.render('battle', await generateBattle());
+  res.render('battle', { battle: await generateBattle() });
 });
 router.get('/battle/json', async (req, res) => {
-  res.json(await generateBattle());
+  res.json({ battle: await generateBattle() });
 });
 
 router.get('/db', async (req, res) => {
-  res.render('weeksDb', { weeks: await getWeeksSimple() });
+  res.render('weeksDb', { weeks: await aggregateWeeksSimple() });
 });
 router.get('/db/json', async (req, res) => {
-  res.json({ weeks: await getWeeksSimple() });
+  res.json({ weeks: await aggregateWeeksSimple() });
+});
+router.get('/db/battle/:id', async (req, res) => {
+  res.render('battle', { battle: await getBattleSummary(Number(req.params.id)) });
+});
+router.get('/db/battle/:id/json', async (req, res) => {
+  res.json({ battle: await getBattleSummary(Number(req.params.id)) });
 });
 router.get('/db/reset', async (req, res) => {
   await createTables(true);

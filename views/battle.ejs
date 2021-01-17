@@ -6,14 +6,14 @@
     <link rel='stylesheet' href='/style.css'>
   </head>
   <body>
-    <% rounds.forEach((round, i) => { %>
+    <% battle.rounds.forEach((round, i) => { %>
       <h2>Round <%= i + 1 %></h2>
       <% round.performances.forEach((perf) => { %>
-        <p><span style='color: <%= perf.band.color %>'><%= perf.band.name %></span> - <%= perf.song.name %> - <b><%= perf.score %></b></p>
+        <p><%- include('band', { band: perf.band }) %> - <%= perf.song.name %> - <b><%= perf.score %></b></p>
       <% }); %>
-      <h3>Eliminated: <span style='color: <%= round.eliminee.color %>'><%= round.eliminee.name %></span></h3>
+      <h3>Eliminated: <%- include('band', { band: round.performances[round.performances.length - 1].band }) %></h3>
     <% }); %>
 
-    <h2>Winner: <span style='color: <%= rankedBands[0].color %>'><%= rankedBands[0].name %></span></h2>
+    <h2>Winner: <%- include('band', { band: battle.bands[0].band }) %></h2>
   </body>
 </html>

@@ -345,3 +345,8 @@ export async function aggregateWeeksSimple(): Promise<WeekSummarySimple[]> {
   const { rows } = await runQuery('weeksSimple');
   return rows;
 }
+
+export async function getBattleSummary(id: number) {
+  const { rows } = await runQuery('battle', [id]);
+  return rows[0];
+}

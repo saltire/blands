@@ -31,7 +31,7 @@ function runBattle(bands: Band[]): Battle {
 
   return {
     rounds,
-    rankedBands,
+    bands: rankedBands,
   };
 }
 
@@ -90,10 +90,10 @@ export async function generateWeeks(options?: weeksOptions): Promise<Week[]> {
           const battleBands = range(battleSize).map(() => pickOut(levelBands) as Band);
           const battle = runBattle(battleBands);
 
-          const bandSnapshot = battle.rankedBands.map(band => JSON.parse(JSON.stringify(band)));
+          const bandSnapshot = battle.bands.map(band => JSON.parse(JSON.stringify(band)));
 
           battleBands.forEach(band => {
-            const rankedIndex = battle.rankedBands.indexOf(band);
+            const rankedIndex = battle.bands.indexOf(band);
             const buzzAwarded = getBuzzAwarded(levelBaseBuzz, rankedIndex);
             const newBuzz = band.buzz + buzzAwarded;
             const newLevel = Math.min(maxLevel, Math.max(0, Math.floor(Math.log10(newBuzz))));
@@ -112,7 +112,7 @@ export async function generateWeeks(options?: weeksOptions): Promise<Week[]> {
                   };
                 })
                 .filter(Boolean) as BandPerformance[],
-              rank: battle.rankedBands.length - battle.rankedBands.indexOf(band),
+              rank: battle.bands.length - battle.bands.indexOf(band),
               buzzAwarded,
               newLevel,
             });
@@ -122,7 +122,7 @@ export async function generateWeeks(options?: weeksOptions): Promise<Week[]> {
           });
 
           // Add a snapshot of each band to the battle data.
-          battle.rankedBands = bandSnapshot;
+          battle.bands = bandSnapshot;
           return battle;
         }),
       };

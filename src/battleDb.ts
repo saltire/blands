@@ -2,7 +2,7 @@ import {
   Band, Song,
   addNewBands, setBandsBuzz, getBandsAtLevel, addNewSongs, getBandsSongs,
   addNewWeek, addNewBattles, addNewEntries, addNewPerformances, addNewRounds,
-  aggregateWeeks, aggregateWeeksSimple, setWeeklyBuzz,
+  setWeeklyBuzz,
 } from './db';
 import { getBandGenerator, getSongNameGenerator } from './generator';
 import { mapSeries, pickOut, range, shuffle } from './utils';
@@ -22,6 +22,7 @@ interface WeeksOptions {
   battleSize?: number;
 }
 
+// eslint-disable-next-line import/prefer-default-export
 export async function generateWeeks(options?: WeeksOptions) {
   const { weekCount = 5, maxLevel = 5, battleSize = 5 } = options || {};
   const songCount = battleSize - 1;
@@ -168,12 +169,4 @@ export async function generateWeeks(options?: WeeksOptions) {
 
     return week;
   });
-}
-
-export async function getWeeks() {
-  return aggregateWeeks();
-}
-
-export async function getWeeksSimple() {
-  return aggregateWeeksSimple();
 }
