@@ -76,6 +76,11 @@ export async function createTables(dropTables?: boolean) {
     ].join(''));
 }
 
+export async function clearTables() {
+  return pool.query(tableNames
+    .map(table => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE;`).join(''));
+}
+
 
 const band = defineTable({
   id: serial().notNull().primaryKey().default("nextval('band_id_seq')"),

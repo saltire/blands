@@ -8,7 +8,7 @@ import path from 'path';
 import { generateBattle, generateWeeks } from './battle';
 import { generateWeeks as generateWeeksDb, getWeeks as getWeeksDb, getWeeksSimple } from './battleDb';
 import { getBandNameGenerator, getSongNameGenerator } from './generator';
-import { createTables } from './db';
+import { createTables, clearTables } from './db';
 import { getWeeks as getWeeksPrisma } from './prisma';
 
 
@@ -53,6 +53,14 @@ app.use(router
     await createTables(true);
     await generateWeeksDb();
     ctx.redirect('/db');
+  })
+  .post('/db/addWeek', async ({ response }) => {
+    await generateWeeksDb({ weekCount: 1 });
+    response.redirect('/db');
+  })
+  .post('/db/clear', async ({ response }) => {
+    await clearTables();
+    response.redirect('/db');
   })
   .get('/band', async ({ response }) => {
     const bandGen = await getBandNameGenerator();
