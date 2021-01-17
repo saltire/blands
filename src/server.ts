@@ -6,9 +6,9 @@ import serveStatic from 'koa-static';
 import path from 'path';
 
 import { generateBattle, generateWeeks } from './battle';
-import { generateWeeks as generateWeeksDb, getWeeks as getWeeksDb, getWeeksSimple } from './battleDb';
+import { generateWeeks as generateWeeksDb, getWeeksSimple } from './battleDb';
 import { getBandNameGenerator, getSongNameGenerator } from './generator';
-import { createTables, clearTables } from './db';
+import { createTables } from './db';
 import { getWeeks as getWeeksPrisma } from './prisma';
 
 
@@ -43,7 +43,7 @@ app.use(router
     await ctx.render('battle', await generateBattle());
   })
   .get('/db', async ctx => {
-    await ctx.render('weeksDb', { weeks: await getWeeksDb() });
+    await ctx.render('weeksDb', { weeks: await getWeeksSimple() });
   })
   .get('/db/json', async ({ response }) => {
     response.body = JSON.stringify({ weeks: await getWeeksSimple() });
@@ -59,8 +59,8 @@ app.use(router
     response.redirect('/db');
   })
   .post('/db/clear', async ({ response }) => {
-    // await createTables(true);
-    await clearTables();
+    await createTables(true);
+    // await clearTables();
     response.redirect('/db');
   })
   .get('/band', async ({ response }) => {

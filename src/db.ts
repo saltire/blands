@@ -24,6 +24,7 @@ const queries = fs.readdir(sqlDir)
 const runQuery = async (queryName: string, values?: any[]): Promise<QueryResult> => (
   pool.query((await queries)[queryName], values));
 
+/* eslint-disable camelcase */
 
 // Define tables, manually for now.
 // Should be able to use these for migrations, but haven't got mammoth-cli working yet.
@@ -31,73 +32,74 @@ const runQuery = async (queryName: string, values?: any[]): Promise<QueryResult>
 // Current version of mammoth doesn't support creating rows without specifying the serial.
 // Remove 'default' call once fix is released.
 
-const tableNames = ['band', 'song', 'week', 'battle', 'entry', 'round', 'performance'];
+const tables = {
+  band: `CREATE TABLE IF NOT EXISTS band (
+    id serial NOT NULL PRIMARY KEY,
+    name text NOT NULL,
+    color text NOT NULL,
+    buzz integer NOT NULL DEFAULT 0,
+    level integer NOT NULL DEFAULT 1
+  );`,
+
+  song: `CREATE TABLE IF NOT EXISTS song (
+    id serial NOT NULL PRIMARY KEY,
+    band_id integer NOT NULL REFERENCES band (id),
+    name text NOT NULL
+  );`,
+
+  week: `CREATE TABLE IF NOT EXISTS week (
+    id serial NOT NULL PRIMARY KEY
+  );`,
+
+  weekly_buzz: `CREATE TABLE IF NOT EXISTS weekly_buzz (
+    week_id integer NOT NULL REFERENCES week (id),
+    band_id integer NOT NULL REFERENCES band (id),
+    buzz integer NOT NULL DEFAULT 0,
+    PRIMARY KEY (week_id, band_id)
+  );`,
+
+  battle: `CREATE TABLE IF NOT EXISTS battle (
+    id serial NOT NULL PRIMARY KEY,
+    week_id integer NOT NULL REFERENCES week (id),
+    level integer NOT NULL
+  );`,
+
+  entry: `CREATE TABLE IF NOT EXISTS entry (
+    battle_id integer NOT NULL REFERENCES battle (id),
+    band_id integer NOT NULL REFERENCES band (id),
+    buzz_start integer NOT NULL,
+    place integer,
+    buzz_awarded integer,
+    PRIMARY KEY (battle_id, band_id)
+  );`,
+
+  round: `CREATE TABLE IF NOT EXISTS round (
+    battle_id integer NOT NULL REFERENCES battle (id),
+    index serial NOT NULL,
+    PRIMARY KEY (battle_id, index)
+  );`,
+
+  performance: `CREATE TABLE IF NOT EXISTS performance (
+    battle_id integer NOT NULL,
+    round_index integer NOT NULL,
+    band_id integer NOT NULL REFERENCES band (id),
+    song_id integer NOT NULL REFERENCES song (id),
+    score integer NOT NULL,
+    FOREIGN KEY (battle_id, round_index) REFERENCES round (battle_id, index),
+    PRIMARY KEY (battle_id, round_index, band_id)
+  )`,
+};
 
 export async function createTables(dropTables?: boolean) {
   return pool.query(
     [
-      ...dropTables ? tableNames.map(table => `DROP TABLE ${table} CASCADE;`) : [],
-
-      `CREATE TABLE IF NOT EXISTS band (
-        id serial NOT NULL PRIMARY KEY,
-        name text NOT NULL,
-        color text NOT NULL,
-        buzz integer NOT NULL DEFAULT 0,
-        level integer NOT NULL DEFAULT 1
-      );`,
-
-      `CREATE TABLE IF NOT EXISTS song (
-        id serial NOT NULL PRIMARY KEY,
-        band_id integer NOT NULL REFERENCES band (id),
-        name text NOT NULL
-      );`,
-
-      `CREATE TABLE IF NOT EXISTS week (
-        id serial NOT NULL PRIMARY KEY
-      );`,
-
-      `CREATE TABLE IF NOT EXISTS weekly_buzz (
-        week_id integer NOT NULL REFERENCES week (id),
-        band_id integer NOT NULL REFERENCES band (id),
-        buzz integer NOT NULL DEFAULT 0,
-        PRIMARY KEY (week_id, band_id)
-      );`,
-
-      `CREATE TABLE IF NOT EXISTS battle (
-        id serial NOT NULL PRIMARY KEY,
-        week_id integer NOT NULL REFERENCES week (id),
-        level integer NOT NULL
-      );`,
-
-      `CREATE TABLE IF NOT EXISTS entry (
-        battle_id integer NOT NULL REFERENCES battle (id),
-        band_id integer NOT NULL REFERENCES band (id),
-        buzz_start integer NOT NULL,
-        place integer,
-        buzz_awarded integer,
-        PRIMARY KEY (battle_id, band_id)
-      );`,
-
-      `CREATE TABLE IF NOT EXISTS round (
-        battle_id integer NOT NULL REFERENCES battle (id),
-        index serial NOT NULL,
-        PRIMARY KEY (battle_id, index)
-      );`,
-
-      `CREATE TABLE IF NOT EXISTS performance (
-        battle_id integer NOT NULL,
-        round_index integer NOT NULL,
-        band_id integer NOT NULL REFERENCES band (id),
-        song_id integer NOT NULL REFERENCES song (id),
-        score integer NOT NULL,
-        FOREIGN KEY (battle_id, round_index) REFERENCES round (battle_id, index),
-        PRIMARY KEY (battle_id, round_index, band_id)
-      )`,
+      ...dropTables ? Object.keys(tables).map(table => `DROP TABLE ${table} CASCADE;`) : [],
+      ...Object.values(tables),
     ].join(''));
 }
 
 export async function clearTables() {
-  return pool.query(tableNames
+  return pool.query(Object.keys(tables)
     .map(table => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE;`).join(''));
 }
 
@@ -299,8 +301,6 @@ export async function addNewPerformances(performances: Performance[]) {
     .values(performances);
 }
 
-
-/* eslint-disable camelcase */
 
 interface WeekSummary {
   week_id: number,

@@ -8,6 +8,7 @@ JOIN (
     weekly_buzz_ranked.week_id,
     json_agg(json_build_object(
       'name', band.name,
+      'color', band.color,
       'buzz', weekly_buzz_ranked.buzz,
       'rank', weekly_buzz_ranked.rank
     ) ORDER BY weekly_buzz_ranked.rank ASC, band.name ASC) as top_bands

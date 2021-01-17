@@ -17,26 +17,22 @@
     <div class='flex'>
       <% weeks.forEach((week, w) => { %>
         <div>
-          <h1>Week <%= week.week_id %></h1>
-          <div class='flex'>
-            <div>
-              <% week.levels.forEach((level) => { %>
-                <h2>Level <%= level.level %></h2>
-                <div class='flex'>
-                  <div>
-                    <h2>Battles</h2>
-                    <% level.battles.forEach((battle, b) => { %>
-                      <div class='pad'>
-                        <% battle.entries.forEach((entry) => { %>
-                          <p><span style='color: <%= entry.band_color %>'><%= entry.band_name %></span> - <%= entry.buzz_final %></p>
-                        <% }); %>
-                      </div>
-                    <% }); %>
-                  </div>
-                </div>
+          <h1>Week <%= week.id %></h1>
+
+          <h2>Top 10 Bands</h2>
+          <% week.top_bands.forEach((band) => { %>
+            <p><%= band.rank %>. <span style='color: <%= band.color %>'><%= band.name %></span> - <%= band.buzz %></p>
+          <% }); %>
+
+          <h2>Battles</h2>
+          <% week.battles.forEach((battle, b) => { %>
+            <h4>Level <%= battle.level %></h4>
+            <div class='pad'>
+              <% battle.entries.forEach((entry) => { %>
+                <p><span style='color: <%= entry.band.color %>'><%= entry.band.name %></span> - <%= entry.buzz_start + entry.buzz_awarded %></p>
               <% }); %>
             </div>
-          </div>
+          <% }); %>
         </div>
       <% }); %>
     </div>
