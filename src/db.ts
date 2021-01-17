@@ -11,98 +11,45 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false },
 });
 
-
-// Get SQL queries from files.
 const sqlDir = path.resolve(__dirname, '../sql');
-const queries = fs.readdir(sqlDir)
-  .then(async files => Object.fromEntries(await Promise.all(files
+async function getQueries(): Promise<{ [name: string]: string }> {
+  const files = await fs.readdir(sqlDir);
+  return Object.fromEntries(await Promise.all(files
+    .filter(file => /\.sql$/.test(file))
     .map(async file => [
       file.replace(/\.sql$/, ''),
       await fs.readFile(path.join(sqlDir, file), { encoding: 'utf-8' }),
-    ]))));
+    ])));
+}
+const queriesPromise = getQueries();
 
-const runQuery = async (queryName: string, values?: any[]): Promise<QueryResult> => (
-  pool.query((await queries)[queryName], values));
+async function runQuery(queryName: string, values?: any[]): Promise<QueryResult> {
+  return pool.query((await queriesPromise)[queryName], values);
+}
 
-/* eslint-disable camelcase */
-
-// Define tables, manually for now.
-// Should be able to use these for migrations, but haven't got mammoth-cli working yet.
-
-// Current version of mammoth doesn't support creating rows without specifying the serial.
-// Remove 'default' call once fix is released.
-
-const tables = {
-  band: `CREATE TABLE IF NOT EXISTS band (
-    id serial NOT NULL PRIMARY KEY,
-    name text NOT NULL,
-    color text NOT NULL,
-    buzz integer NOT NULL DEFAULT 0,
-    level integer NOT NULL DEFAULT 1
-  );`,
-
-  song: `CREATE TABLE IF NOT EXISTS song (
-    id serial NOT NULL PRIMARY KEY,
-    band_id integer NOT NULL REFERENCES band (id),
-    name text NOT NULL
-  );`,
-
-  week: `CREATE TABLE IF NOT EXISTS week (
-    id serial NOT NULL PRIMARY KEY
-  );`,
-
-  weekly_buzz: `CREATE TABLE IF NOT EXISTS weekly_buzz (
-    week_id integer NOT NULL REFERENCES week (id),
-    band_id integer NOT NULL REFERENCES band (id),
-    buzz integer NOT NULL DEFAULT 0,
-    PRIMARY KEY (week_id, band_id)
-  );`,
-
-  battle: `CREATE TABLE IF NOT EXISTS battle (
-    id serial NOT NULL PRIMARY KEY,
-    week_id integer NOT NULL REFERENCES week (id),
-    level integer NOT NULL
-  );`,
-
-  entry: `CREATE TABLE IF NOT EXISTS entry (
-    battle_id integer NOT NULL REFERENCES battle (id),
-    band_id integer NOT NULL REFERENCES band (id),
-    buzz_start integer NOT NULL,
-    place integer,
-    buzz_awarded integer,
-    PRIMARY KEY (battle_id, band_id)
-  );`,
-
-  round: `CREATE TABLE IF NOT EXISTS round (
-    battle_id integer NOT NULL REFERENCES battle (id),
-    index serial NOT NULL,
-    PRIMARY KEY (battle_id, index)
-  );`,
-
-  performance: `CREATE TABLE IF NOT EXISTS performance (
-    battle_id integer NOT NULL,
-    round_index integer NOT NULL,
-    band_id integer NOT NULL REFERENCES band (id),
-    song_id integer NOT NULL REFERENCES song (id),
-    score integer NOT NULL,
-    FOREIGN KEY (battle_id, round_index) REFERENCES round (battle_id, index),
-    PRIMARY KEY (battle_id, round_index, band_id)
-  )`,
-};
+function getTableNames(tablesQuery: string) {
+  return Array.from(tablesQuery.matchAll(/CREATE TABLE IF NOT EXISTS (\w+)/g)).map(m => m[1]);
+}
 
 export async function createTables(dropTables?: boolean) {
-  return pool.query(
-    [
-      ...dropTables ? Object.keys(tables).map(table => `DROP TABLE ${table} CASCADE;`) : [],
-      ...Object.values(tables),
-    ].join(''));
+  const tablesQuery = (await queriesPromise).createTables;
+  const tables = getTableNames(tablesQuery);
+
+  return pool.query([
+    ...dropTables ? tables.map(table => `DROP TABLE ${table} CASCADE`) : [],
+    tablesQuery,
+  ].join('; '));
 }
 
 export async function clearTables() {
-  return pool.query(Object.keys(tables)
-    .map(table => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE;`).join(''));
+  const tablesQuery = (await queriesPromise).createTables;
+  const tables = getTableNames(tablesQuery);
+  return pool.query(tables.map(table => `TRUNCATE TABLE ${table} RESTART IDENTITY CASCADE`)
+    .join('; '));
 }
 
+// Current version of mammoth doesn't support creating rows without specifying the serial value.
+// Remove 'default' call once fix is released.
 
 const band = defineTable({
   id: serial().notNull().primaryKey().default("nextval('band_id_seq')"),
@@ -301,6 +248,8 @@ export async function addNewPerformances(performances: Performance[]) {
     .values(performances);
 }
 
+
+/* eslint-disable camelcase */
 
 interface WeekSummary {
   week_id: number,
