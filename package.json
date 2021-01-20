@@ -5,7 +5,7 @@
     "node": "14"
   },
   "scripts": {
-    "start": "node built/index.js",
+    "start": "node built/server.js",
     "watch": "nodemon -x ts-node -- -r dotenv/config src/server.ts",
     "build": "tsc",
     "lint": "eslint ./src"
