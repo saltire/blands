@@ -28,7 +28,7 @@
 
           <h2>Battles</h2>
           <% week.battles.forEach((battle, b) => { %>
-            <h4>Level <%= battle.level %></h4>
+            <h4><a href='/battle/<%= battle.id %>'>Level <%= battle.level %></a></h4>
             <div class='pad'>
               <% battle.entries.forEach((entry) => { %>
                 <p><%- include('band', { band: entry.band }) %> - <%= entry.buzz_start + entry.buzz_awarded %></p>

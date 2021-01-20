@@ -26,11 +26,13 @@ JOIN (
   SELECT
     _battle.week_id,
     json_agg(json_build_object(
+      'id', _battle.id,
       'level', _battle.level,
       'entries', _battle.entries
     ) ORDER BY _battle.level DESC) as battles
   FROM (
     SELECT
+      battle.id,
       battle.week_id,
       battle.level,
       json_agg(json_build_object(

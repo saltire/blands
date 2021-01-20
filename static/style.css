@@ -41,6 +41,10 @@ p {
   white-space: nowrap;
 }
 
+a {
+  color: inherit;
+}
+
 input, button {
   font-family: inherit;
   font-weight: inherit;
