@@ -36,25 +36,17 @@ JOIN (
       battle.week_id,
       battle.level,
       json_agg(json_build_object(
-        'place', _entry.place,
-        'buzz_start', _entry.buzz_start,
-        'buzz_awarded', _entry.buzz_awarded,
-        'band', _entry.band
-      ) ORDER BY _entry.place ASC) AS entries
-    FROM battle
-    JOIN (
-      SELECT
-        entry.battle_id,
-        entry.place,
-        entry.buzz_start,
-        entry.buzz_awarded,
-        json_build_object(
+        'place', entry.place,
+        'buzz_start', entry.buzz_start,
+        'buzz_awarded', entry.buzz_awarded,
+        'band', json_build_object(
           'name', band.name,
           'color', band.color
-        ) AS band
-      FROM entry
-      JOIN band ON band.id = entry.band_id
-    ) _entry ON _entry.battle_id = battle.id
+        )
+      ) ORDER BY entry.place ASC) AS entries
+    FROM battle
+    JOIN entry ON entry.battle_id = battle.id
+    JOIN band ON band.id = entry.band_id
     GROUP BY battle.id
   ) _battle
   GROUP BY _battle.week_id
