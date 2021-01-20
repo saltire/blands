@@ -8,6 +8,10 @@ body {
   overflow-x: scroll;
 }
 
+header form {
+  display: inline-block;
+}
+
 h1, h2, h3 {
   margin: 2rem 0 1rem;
 }

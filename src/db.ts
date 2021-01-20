@@ -252,26 +252,6 @@ export async function addNewPerformances(performances: Performance[]) {
 /* eslint-disable camelcase */
 
 interface WeekSummary {
-  week_id: number,
-  levels: {
-    level: number,
-    battles: {
-      entries: {
-        place: number,
-        band_name: string,
-        band_color: string,
-        buzz_start: number,
-        buzz_final: number,
-      }[],
-    }[],
-  }[],
-}
-export async function aggregateWeeks(): Promise<WeekSummary[]> {
-  const { rows } = await runQuery('weeks');
-  return rows;
-}
-
-interface WeekSummarySimple {
   id: number,
   top_bands: {
     name: string,
@@ -290,8 +270,8 @@ interface WeekSummarySimple {
     }[],
   }[],
 }
-export async function aggregateWeeksSimple(): Promise<WeekSummarySimple[]> {
-  const { rows } = await runQuery('weeksSimple');
+export async function aggregateWeeks(): Promise<WeekSummary[]> {
+  const { rows } = await runQuery('weeks');
   return rows;
 }
 

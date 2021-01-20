@@ -4,7 +4,7 @@ import morgan from 'morgan';
 import path from 'path';
 
 import { generateWeeks } from './battle';
-import { createTables, aggregateWeeksSimple, getBattleSummary } from './db';
+import { createTables, aggregateWeeks, getBattleSummary } from './db';
 import { getBandNameGenerator, getSongNameGenerator } from './generator';
 
 
@@ -17,10 +17,13 @@ app.set('views', path.resolve(__dirname, '../views'));
 const router = Router();
 
 router.get('/', async (req, res) => {
-  res.render('weeks', { weeks: await aggregateWeeksSimple() });
+  res.render('weeks', { weeks: await aggregateWeeks() });
+});
+router.get('/admin', async (req, res) => {
+  res.render('weeks', { weeks: await aggregateWeeks(), admin: true });
 });
 router.get('/json', async (req, res) => {
-  res.json({ weeks: await aggregateWeeksSimple() });
+  res.json({ weeks: await aggregateWeeks() });
 });
 router.get('/battle/:id', async (req, res) => {
   res.render('battle', { battle: await getBattleSummary(Number(req.params.id)) });

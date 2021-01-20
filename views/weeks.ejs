@@ -6,14 +6,16 @@
     <link rel='stylesheet' href='/style.css'>
   </head>
   <body>
-    <header>
-      <form action='/addWeek' method='post'>
-        <input type='submit' value='Next week'>
-      </form>
-      <form action='/clear' method='post'>
-        <input type='submit' value='Reset'>
-      </form>
-    </header>
+    <% if (locals.admin) { %>
+      <header>
+        <form action='/addWeek' method='post'>
+          <input type='submit' value='Next week'>
+        </form>
+        <form action='/clear' method='post'>
+          <input type='submit' value='Reset'>
+        </form>
+      </header>
+    <% } %>
     <div class='flex'>
       <% weeks.forEach((week, w) => { %>
         <div>
