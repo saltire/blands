@@ -292,6 +292,7 @@ interface BattleSummary {
         color: string,
       },
       song: {
+        id: number,
         name: string,
       },
       score: number,
@@ -313,6 +314,7 @@ interface BandSummary {
   name: string,
   color: string,
   songs: {
+    id: number,
     name: string,
   }[],
 }
