@@ -36,8 +36,7 @@ export async function generateWeeks(options?: WeeksOptions) {
     // For each battle at each level, pick bands at that level from the array.
     // TODO: When picking, prioritize bands that placed top 3 in a battle last week.
     const enteredBandsByLevel = await Promise.all(range(maxLevel).map(async l => {
-      // Start at the top level and work downward.
-      const level = maxLevel - l;
+      const level = l + 1;
 
       // The top level has one battle; each level down has one more than the one above it.
       const minBattleCount = maxLevel - level + 1;
@@ -80,8 +79,8 @@ export async function generateWeeks(options?: WeeksOptions) {
       })));
 
     // Run the battles.
-    const week = await Promise.all(range(maxLevel).map(async l => {
-      const level = maxLevel - l;
+    const week = await mapSeries(range(maxLevel), async l => {
+      const level = l + 1;
       const levelBaseBuzz = 10 ** level;
 
       const levelEnteredBands = enteredBandsByLevel[l];
@@ -158,7 +157,7 @@ export async function generateWeeks(options?: WeeksOptions) {
           bandUpdates,
         };
       }));
-    }));
+    });
 
     await Promise.all([
       addNewEntries(week.flatMap(level => level.flatMap(battle => battle.entries))),

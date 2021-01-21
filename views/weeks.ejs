@@ -17,24 +17,27 @@
       </header>
     <% } %>
     <div class='flex'>
-      <% weeks.forEach((week, w) => { %>
+      <% weeks.forEach(week => { %>
         <div>
           <h1>Week <%= week.id %></h1>
 
           <h2>Top 10 Bands</h2>
-          <% week.top_bands.forEach((band) => { %>
+          <% week.top_bands.forEach(band => { %>
             <p><%= band.rank %>. <%- include('band', { band }) %> - <%= band.buzz %></p>
           <% }); %>
 
           <h2>Battles</h2>
-          <% week.battles.forEach((battle, b) => { %>
-            <h4><a href='/battle/<%= battle.id %>'>Level <%= battle.level %></a></h4>
-            <div class='pad'>
-              <% battle.entries.forEach((entry) => { %>
-                <p><%- include('band', { band: entry.band }) %> - <%= entry.buzz_start + entry.buzz_awarded %></p>
-              <% }); %>
-            </div>
-          <% }); %>
+          <% week.levels.forEach(level => { %>
+            <h3>Level <%= level.level %></h3>
+            <% level.battles.forEach(battle => { %>
+              <h4><a href='/battle/<%= battle.id %>'>Battle #<%= battle.id %></a></h4>
+              <div class='pad'>
+                <% battle.entries.forEach(entry => { %>
+                  <p><%- include('band', { band: entry.band }) %> - <%= entry.buzz_start + entry.buzz_awarded %></p>
+                <% }); %>
+              </div>
+            <% }); %>
+          <% }) %>
         </div>
       <% }); %>
     </div>
