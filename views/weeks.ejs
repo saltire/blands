@@ -23,7 +23,7 @@
 
           <h2>Top 10 Bands</h2>
           <% week.top_bands.forEach(band => { %>
-            <p><%= band.rank %>. <%- include('band', { band }) %> - <%= band.buzz %></p>
+            <p><%= band.rank %>. <%- include('bandname', { band }) %> - <%= band.buzz %></p>
           <% }); %>
 
           <h2>Battles</h2>
@@ -33,7 +33,7 @@
               <h4><a href='/battle/<%= battle.id %>'>Battle #<%= battle.id %></a></h4>
               <div class='pad'>
                 <% battle.entries.forEach(entry => { %>
-                  <p><%- include('band', { band: entry.band }) %> - <%= entry.buzz_start + entry.buzz_awarded %></p>
+                  <p><%- include('bandname', { band: entry.band }) %> - <%= entry.buzz_start + entry.buzz_awarded %></p>
                 <% }); %>
               </div>
             <% }); %>

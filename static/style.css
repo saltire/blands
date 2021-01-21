@@ -45,6 +45,10 @@ a {
   color: inherit;
 }
 
+a.band {
+  text-decoration: none;
+}
+
 input, button {
   font-family: inherit;
   font-weight: inherit;

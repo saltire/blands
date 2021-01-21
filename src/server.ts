@@ -4,7 +4,7 @@ import morgan from 'morgan';
 import path from 'path';
 
 import { generateWeeks } from './battle';
-import { createTables, aggregateWeeks, getBattleSummary } from './db';
+import { createTables, getWeekSummaries, getBattleSummary, getBandSummary } from './db';
 import { getBandNameGenerator, getSongNameGenerator } from './generator';
 
 
@@ -17,27 +17,36 @@ app.set('views', path.resolve(__dirname, '../views'));
 const router = Router();
 
 router.get('/', async (req, res) => {
-  res.render('weeks', { weeks: await aggregateWeeks() });
-});
-router.get('/admin', async (req, res) => {
-  res.render('weeks', { weeks: await aggregateWeeks(), admin: true });
+  res.render('weeks', { weeks: await getWeekSummaries() });
 });
 router.get('/json', async (req, res) => {
-  res.json({ weeks: await aggregateWeeks() });
+  res.json({ weeks: await getWeekSummaries() });
 });
+
 router.get('/battle/:id', async (req, res) => {
   res.render('battle', { battle: await getBattleSummary(Number(req.params.id)) });
 });
 router.get('/battle/:id/json', async (req, res) => {
   res.json({ battle: await getBattleSummary(Number(req.params.id)) });
 });
-router.post('/addWeek', async (req, res) => {
-  await generateWeeks({ weekCount: 1 });
-  res.redirect('/');
+
+router.get('/band/:id', async (req, res) => {
+  res.render('band', { band: await getBandSummary(Number(req.params.id)) });
 });
-router.post('/clear', async (req, res) => {
+router.get('/band/:id/json', async (req, res) => {
+  res.json({ band: await getBandSummary(Number(req.params.id)) });
+});
+
+router.get('/admin', async (req, res) => {
+  res.render('weeks', { weeks: await getWeekSummaries(), admin: true });
+});
+router.post('/admin/addWeek', async (req, res) => {
+  await generateWeeks({ weekCount: 1 });
+  res.redirect('/admin');
+});
+router.post('/admin/clear', async (req, res) => {
   await createTables(true);
-  res.redirect('/');
+  res.redirect('/admin');
 });
 
 router.get('/band', async (req, res) => {

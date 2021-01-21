@@ -6,7 +6,7 @@
   },
   "scripts": {
     "start": "node built/server.js",
-    "watch": "nodemon -x ts-node -- -r dotenv/config src/server.ts",
+    "watch": "nodemon -e ts,json,sql -x ts-node -- -r dotenv/config src/server.ts",
     "build": "tsc",
     "lint": "eslint ./src"
   },

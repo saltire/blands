@@ -7,6 +7,7 @@ JOIN (
   SELECT
     weekly_buzz_ranked.week_id,
     json_agg(json_build_object(
+      'id', band.id,
       'name', band.name,
       'color', band.color,
       'buzz', weekly_buzz_ranked.buzz,
@@ -47,6 +48,7 @@ JOIN (
           'buzz_start', entry.buzz_start,
           'buzz_awarded', entry.buzz_awarded,
           'band', json_build_object(
+            'id', band.id,
             'name', band.name,
             'color', band.color
           )

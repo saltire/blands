@@ -254,28 +254,69 @@ export async function addNewPerformances(performances: Performance[]) {
 interface WeekSummary {
   id: number,
   top_bands: {
+    id: number,
     name: string,
+    color: string,
     buzz: number,
+    rank: number,
   }[],
-  battles: {
+  levels: {
     level: number,
-    entries: {
-      place: number,
-      buzz_start: number,
-      buzz_awarded: number,
-      band: {
-        name: string,
-        color: string,
-      },
+    battles: {
+      id: number,
+      entries: {
+        place: number,
+        buzz_start: number,
+        buzz_awarded: number,
+        band: {
+          id: number,
+          name: string,
+          color: string,
+        },
+      }[],
     }[],
   }[],
 }
-export async function aggregateWeeks(): Promise<WeekSummary[]> {
+export async function getWeekSummaries(): Promise<WeekSummary[]> {
   const { rows } = await runQuery('weeks');
   return rows;
 }
 
-export async function getBattleSummary(id: number) {
+interface BattleSummary {
+  id: number,
+  rounds: {
+    performances: {
+      band: {
+        id: number,
+        name: string,
+        color: string,
+      },
+      song: {
+        name: string,
+      },
+      score: number,
+    }[],
+  }[],
+  bands: {
+    id: number,
+    name: string,
+    color: string,
+  }[],
+}
+export async function getBattleSummary(id: number): Promise<BattleSummary[]> {
   const { rows } = await runQuery('battle', [id]);
+  return rows[0];
+}
+
+interface BandSummary {
+  id: number,
+  name: string,
+  color: string,
+  songs: {
+    name: string,
+  }[],
+}
+export async function getBandSummary(id: number): Promise<BandSummary[]> {
+  const { rows } = await runQuery('band', [id]);
   return rows[0];
 }

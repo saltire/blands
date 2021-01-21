@@ -1,4 +1,5 @@
 SELECT
+  battle.id,
   rounds.rounds,
   ranked_bands.bands
 FROM battle
@@ -15,6 +16,7 @@ JOIN (
       performance.round_index,
       json_agg(json_build_object(
         'band', json_build_object(
+          'id', band.id,
           'name', band.name,
           'color', band.color
         ),
@@ -36,6 +38,7 @@ JOIN (
     json_agg(json_build_object(
       'place', entry.place,
       'band', json_build_object(
+        'id', band.id,
         'name', band.name,
         'color', band.color
       )

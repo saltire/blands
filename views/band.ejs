@@ -1,1 +1,16 @@
-<span style='color: <%= band.color %>'><%= band.name %></span>
+<!doctype html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <title>Blattle of the Blands</title>
+    <link rel='stylesheet' href='/style.css'>
+  </head>
+  <body>
+    <h1><%- include('bandname', { band }) %></h1>
+
+    <h2>Songs</h2>
+    <% band.songs.forEach(song => { %>
+      <p><%= song.name %></p>
+    <% }); %>
+  </body>
+</html>
