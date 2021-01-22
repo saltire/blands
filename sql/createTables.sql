@@ -32,7 +32,6 @@ CREATE TABLE IF NOT EXISTS battle (
 CREATE TABLE IF NOT EXISTS entry (
   battle_id integer NOT NULL REFERENCES battle (id),
   band_id integer NOT NULL REFERENCES band (id),
-  buzz_start integer NOT NULL,
   place integer,
   buzz_awarded integer,
   PRIMARY KEY (battle_id, band_id)

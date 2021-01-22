@@ -8,10 +8,10 @@
   <body>
     <% if (locals.admin) { %>
       <header>
-        <form action='/addWeek' method='post'>
+        <form action='/admin/addWeek' method='post'>
           <input type='submit' value='Next week'>
         </form>
-        <form action='/clear' method='post'>
+        <form action='/admin/clear' method='post'>
           <input type='submit' value='Reset'>
         </form>
       </header>
@@ -33,7 +33,7 @@
               <h4><a href='/battle/<%= battle.id %>'>Battle #<%= battle.id %></a></h4>
               <div class='pad'>
                 <% battle.entries.forEach(entry => { %>
-                  <p><%- include('bandname', { band: entry.band }) %> - <%= entry.buzz_start + entry.buzz_awarded %></p>
+                  <p><%- include('bandname', { band: entry.band }) %></p>
                 <% }); %>
               </div>
             <% }); %>

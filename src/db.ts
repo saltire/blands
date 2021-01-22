@@ -1,4 +1,4 @@
-import { date, defineDb, defineTable, integer, serial, text } from '@ff00ff/mammoth';
+import { arrayAgg, coalesce, date, defineDb, defineTable, integer, serial, text } from '@ff00ff/mammoth';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { Pool, QueryResult } from 'pg';
@@ -23,8 +23,12 @@ async function getQueries(): Promise<{ [name: string]: string }> {
 }
 const queriesPromise = getQueries();
 
+async function getQuery(queryName: string): Promise<string> {
+  return (await queriesPromise)[queryName];
+}
+
 async function runQuery(queryName: string, values?: any[]): Promise<QueryResult> {
-  return pool.query((await queriesPromise)[queryName], values);
+  return pool.query((await getQuery(queryName)), values);
 }
 
 function getTableNames(tablesQuery: string) {
@@ -109,14 +113,12 @@ export type Battle = NewBattle & {
 const entry = defineTable({
   battleId: integer().notNull().references(battle, 'id'),
   bandId: integer().notNull().references(band, 'id'),
-  buzzStart: integer().notNull(),
   place: integer(),
   buzzAwarded: integer(),
 });
 export type Entry = {
   battleId: number,
   bandId: number,
-  buzzStart: number,
   place?: number,
   buzzAwarded?: number,
 }
@@ -159,44 +161,41 @@ const db = defineDb({ band, song, week, battle, entry, round, performance },
 export default db;
 
 
-export async function addNewBands(newBands: NewBand[]): Promise<Band[]> {
-  return db
+export async function getBandIdsAtLevel(level: number): Promise<number[]> {
+  const bands = await db
+    .select(db.band.id)
+    .from(db.band)
+    .where(db.band.level.eq(level));
+
+  return bands.map(b => b.id);
+}
+
+export async function addNewBands(newBands: NewBand[]): Promise<number[]> {
+  const bands = await db
     .insertInto(db.band)
     .values(newBands)
-    .returning('id', 'name', 'color', 'buzz', 'level');
+    .returning('id');
+
+  return bands.map(b => b.id);
+}
+
+export async function halveBuzz() {
+  await runQuery('halveBuzz');
 }
 
 interface BandBuzzUpdate {
   bandId: number,
   buzz: number,
-  level: number,
 }
-export async function setBandsBuzz(updates: BandBuzzUpdate[]) {
-  const valueParams = updates
-    .map((_, i) => {
-      const i3 = i * 3;
-      return i === 0 ? '($1::int, $2::int, $3::int)' :
-        `($${i3 + 1}, $${i3 + 2}, $${i3 + 3})`;
-    })
-    .join(', ');
-
-  return pool.query(
-    `UPDATE band
-      SET buzz = b.buzz, level = b.level
-      FROM (VALUES ${valueParams}) AS b(id, buzz, level)
-      WHERE band.id = b.id;`,
-    updates.flatMap(({ bandId, buzz, level }) => [bandId, buzz, level]));
+export async function addBandsBuzz(updates: BandBuzzUpdate[]) {
+  // Haven't found a clean way to add nested values arrays, so modifying query directly.
+  // pg-format almost works but for some reason casts the numbers to strings.
+  return pool.query((await getQuery('addBuzz')).replace('***',
+    updates.map(({ bandId, buzz }) => `(${bandId}, ${buzz})`).join(', ')));
 }
 
 export async function setWeeklyBuzz(weekId: number) {
   return runQuery('setWeeklyBuzz', [weekId]);
-}
-
-export async function getBandsAtLevel(level: number): Promise<Band[]> {
-  return db
-    .select(db.band.id, db.band.name, db.band.color, db.band.buzz, db.band.level)
-    .from(db.band)
-    .where(db.band.level.eq(level));
 }
 
 export async function addNewSongs(newSongs: NewSong[]) {
@@ -205,11 +204,16 @@ export async function addNewSongs(newSongs: NewSong[]) {
     .values(newSongs);
 }
 
-export async function getBandsSongs(bandIds: number[]): Promise<Song[]> {
+interface BandSongIds {
+  bandId: number,
+  songIds: number[],
+}
+export async function getBandsSongIds(bandIds: number[]): Promise<BandSongIds[]> {
   return db
-    .select(db.song.id, db.song.bandId, db.song.name)
+    .select(db.song.bandId, coalesce(arrayAgg(db.song.id), []).as('songIds'))
     .from(db.song)
-    .where(db.song.bandId.in(bandIds));
+    .where(db.song.bandId.in(bandIds))
+    .groupBy(db.song.bandId);
 }
 
 export async function addNewWeek(): Promise<number> {
@@ -221,13 +225,13 @@ export async function addNewWeek(): Promise<number> {
   return weeks[0].id;
 }
 
-export async function addNewBattles(battles: NewBattle[]): Promise<number[]> {
-  const newBattles = await db
+export async function addNewBattles(newBattles: NewBattle[]): Promise<number[]> {
+  const battles = await db
     .insertInto(db.battle)
-    .values(battles)
+    .values(newBattles)
     .returning('id');
 
-  return newBattles.map(b => b.id);
+  return battles.map(b => b.id);
 }
 
 export async function addNewEntries(entries: Entry[]) {
@@ -266,7 +270,6 @@ interface WeekSummary {
       id: number,
       entries: {
         place: number,
-        buzz_start: number,
         buzz_awarded: number,
         band: {
           id: number,
@@ -313,6 +316,8 @@ interface BandSummary {
   id: number,
   name: string,
   color: string,
+  buzz: number,
+  level: number,
   songs: {
     id: number,
     name: string,

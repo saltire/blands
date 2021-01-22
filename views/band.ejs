@@ -8,6 +8,9 @@
   <body>
     <h1><%- include('bandname', { band }) %></h1>
 
+    <p><b>Level:</b> <%= band.level %></p>
+    <p><b>Buzz:</b> <%= band.buzz %></p>
+
     <h2>Songs</h2>
     <% band.songs.forEach(song => { %>
       <p><%= song.name %></p>

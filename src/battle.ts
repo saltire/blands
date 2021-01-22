@@ -1,8 +1,7 @@
 import {
-  Band, Song,
-  addNewBands, setBandsBuzz, getBandsAtLevel, addNewSongs, getBandsSongs,
+  addNewBands, addBandsBuzz, getBandIdsAtLevel, addNewSongs, getBandsSongIds,
   addNewWeek, addNewBattles, addNewEntries, addNewPerformances, addNewRounds,
-  setWeeklyBuzz,
+  halveBuzz, setWeeklyBuzz,
 } from './db';
 import { getBandGenerator, getSongNameGenerator } from './generator';
 import { mapSeries, pickOut, range, shuffle } from './utils';
@@ -12,9 +11,9 @@ function getBuzzAwarded(levelBaseBuzz: number, index: number) {
   return levelBaseBuzz * ([10, 5, 2.5][index] || 1);
 }
 
-function getBuzzLevel(buzz: number) {
-  return Math.max(1, Math.floor(Math.log10(buzz)));
-}
+// function getBuzzLevel(buzz: number) {
+//   return Math.max(1, Math.floor(Math.log10(buzz)));
+// }
 
 interface WeeksOptions {
   weekCount?: number;
@@ -32,140 +31,118 @@ export async function generateWeeks(options?: WeeksOptions) {
 
   return mapSeries(range(weekCount), async () => {
     const weekId = await addNewWeek();
+    const levels = range(maxLevel).map(l => l + 1); // Run levels from lowest to highest.
 
-    // For each battle at each level, pick bands at that level from the array.
-    // TODO: When picking, prioritize bands that placed top 3 in a battle last week.
-    const enteredBandsByLevel = await Promise.all(range(maxLevel).map(async l => {
-      const level = l + 1;
-
+    // Create battles at each level; pick bands and create entries for each battle.
+    const newBattles = (await mapSeries(levels, async level => {
       // The top level has one battle; each level down has one more than the one above it.
       const minBattleCount = maxLevel - level + 1;
       const minBandCount = minBattleCount * battleSize;
 
       // Get all bands at this level.
-      const levelBands = await getBandsAtLevel(level);
+      const levelBandIds = await getBandIdsAtLevel(level);
 
       // TODO: Bands that placed in top 3 last week are guaranteed a spot; pick these first.
       // If this number exceeds the number of slots, add more battles at this level.
+      // For now, just use the minimum number.
+      const battleCount = minBattleCount;
 
       // Pick from the remaining bands.
-      const enteredBands = range(minBandCount).map(() => pickOut(levelBands))
-        .filter(Boolean) as Band[];
+      const enteringBandIds = range(minBandCount).map(() => pickOut(levelBandIds))
+        .filter(Boolean) as number[];
 
       // If there are any slots remaining, generate new bands (and songs) to fill them.
-      const newBandCount = Math.max(0, minBandCount - enteredBands.length);
+      const newBandCount = Math.max(0, minBandCount - enteringBandIds.length);
       if (newBandCount) {
-        const newBands = await addNewBands(range(newBandCount)
+        const newBandIds = await addNewBands(range(newBandCount)
           .map(() => bandGen.generate({ level })));
-        enteredBands.push(...newBands);
+        enteringBandIds.push(...newBandIds);
 
-        await addNewSongs(newBands.flatMap(newBand => range(songCount)
-          .map(() => ({ bandId: newBand.id, name: songNameGen.generate() }))));
+        await addNewSongs(newBandIds.flatMap(newBandId => range(songCount)
+          .map(() => ({ bandId: newBandId, name: songNameGen.generate() }))));
       }
-
-      return enteredBands;
-    }));
-
-    // Halve each band's buzz without changing level.
-    await setBandsBuzz(enteredBandsByLevel
-      .flatMap(levelEnteredBands => levelEnteredBands.map(band => {
-        // Mutate each band object, and also update it in the db.
-        Object.assign(band, { buzz: Math.floor(band.buzz / 2) });
-        return {
-          bandId: band.id,
-          buzz: band.buzz,
-          level: band.level,
-        };
-      })));
-
-    // Run the battles.
-    const week = await mapSeries(range(maxLevel), async l => {
-      const level = l + 1;
-      const levelBaseBuzz = 10 ** level;
-
-      const levelEnteredBands = enteredBandsByLevel[l];
-      const battleCount = Math.ceil(levelEnteredBands.length / battleSize);
 
       // Create the battles in the db.
       const battleIds = await addNewBattles(range(battleCount).map(() => ({ weekId, level })));
 
-      return Promise.all(battleIds.map(async battleId => {
-        const battleBands = range(battleSize).map(() => pickOut(levelEnteredBands) as Band);
-        const rankedBands: Band[] = [];
+      // Pick bands for each battle and return them.
+      return battleIds.map(battleId => ({
+        battleId,
+        level,
+        bandIds: range(battleSize).map(() => pickOut(enteringBandIds) as number),
+      }));
+    })).flat();
 
-        const [songs] = await Promise.all([
-          // TODO: get a random selection of each band's songs from the db, instead of all songs.
-          getBandsSongs(battleBands.map(band => band.id)),
-          // Add this battle's rounds to the db.
-          addNewRounds(range(battleBands.length - 1).map(index => ({
-            battleId,
-            index,
-          }))),
-        ]);
-        const songsByBand = new Map<Band, Song[]>(
-          battleBands.map(band => [band, songs.filter(song => song.bandId === band.id)]));
+    // Halve every band's buzz.
+    await halveBuzz();
 
-        const performances = range(battleBands.length - 1).flatMap(index => {
-          // Create a performance for each surviving band, in random order.
-          // TODO: store performances in a table, with reference to entry.
-          const roundPerformances = shuffle(battleBands).map(band => {
-            // Pick a song that hasn't been performed yet.
-            const song = pickOut(songsByBand.get(band) as Song[]) as Song;
-            // Assign a random score to the performance.
-            return {
-              battleId,
-              roundIndex: index,
-              bandId: band.id,
-              songId: song.id,
-              score: Math.round(Math.random() * 100),
-            };
-          });
+    // Run the battles.
+    const battleResults = await Promise.all(newBattles.map(async ({ battleId, level, bandIds }) => {
+      const levelBaseBuzz = 10 ** level;
 
-          // Get the lowest-scoring performance (without sorting the array).
-          const minPerf = roundPerformances.reduce((mp, p) => (p.score < mp.score ? p : mp));
-          // Remove the lowest-scoring band from the battle; add it to the top of the ranked list.
-          rankedBands.unshift(
-            ...battleBands.splice(battleBands.findIndex(b => b.id === minPerf.bandId), 1));
+      const remainingBandIds = [...bandIds];
+      const rankedBandIds: number[] = [];
 
-          return roundPerformances;
-        });
+      // TODO: get a random selection of each band's songs from the db, instead of all songs.
+      const songIdsByBandId = Object.fromEntries((await getBandsSongIds(bandIds))
+        .map(({ bandId, songIds }) => [bandId, songIds]));
 
-        // Add the last remaining band to the top of the ranked list.
-        rankedBands.unshift(...battleBands);
+      // Add this battle's rounds to the db.
+      // TODO: rounds don't really need a table at all; modify queries not to use them.
+      await addNewRounds(range(bandIds.length - 1).map(index => ({
+        battleId,
+        index,
+      })));
 
-        // Store each band in an battle+band 'entry' junction table, with their ranking.
-        const entries = rankedBands.map((band, i) => ({
-          battleId,
-          bandId: band.id,
-          buzzStart: band.buzz,
-          place: i + 1,
-          buzzAwarded: getBuzzAwarded(levelBaseBuzz, i),
-        }));
-        // Award buzz to each band and update their levels.
-        const bandUpdates = rankedBands.map((band, i) => {
-          const buzz = band.buzz + (entries[i].buzzAwarded as number);
+      // Generate performances for each round.
+      const performances = range(bandIds.length - 1).flatMap(roundIndex => {
+        // Create a performance for each surviving band, in random order.
+        // TODO: store performances in a table, with reference to entry.
+        const roundPerformances = shuffle(remainingBandIds).map(bandId => {
+          // Pick a song that hasn't been performed yet.
+          const songId = pickOut(songIdsByBandId[bandId] as number[]) as number;
+          // Assign a random score to the performance.
           return {
-            bandId: band.id,
-            buzz,
-            level: Math.min(maxLevel, getBuzzLevel(buzz)),
+            battleId,
+            roundIndex,
+            bandId,
+            songId,
+            score: Math.round(Math.random() * 100),
           };
         });
 
-        return {
-          entries,
-          performances,
-          bandUpdates,
-        };
-      }));
-    });
+        // Get the lowest-scoring performance (without sorting the array).
+        const minPerf = roundPerformances.reduce((mp, p) => (p.score < mp.score ? p : mp));
+        // Remove the lowest-scoring band from the battle; add it to the top of the ranked list.
+        rankedBandIds.unshift(
+          ...remainingBandIds.splice(remainingBandIds.indexOf(minPerf.bandId), 1));
+
+        return roundPerformances;
+      });
+
+      // Add the last remaining band to the top of the ranked list.
+      rankedBandIds.unshift(...remainingBandIds);
+
+      // Store each band in an battle+band 'entry' junction table, with their ranking.
+      return {
+        entries: rankedBandIds.map((bandId, i) => ({
+          battleId,
+          bandId,
+          place: i + 1,
+          buzzAwarded: getBuzzAwarded(levelBaseBuzz, i),
+        })),
+        performances,
+      };
+    }));
 
     await Promise.all([
-      addNewEntries(week.flatMap(level => level.flatMap(battle => battle.entries))),
-      addNewPerformances(week.flatMap(level => level.flatMap(battle => battle.performances))),
-      setBandsBuzz(week.flatMap(level => level.flatMap(battle => battle.bandUpdates)))
+      // Store all battles' entries and performances.
+      addNewEntries(battleResults.flatMap(battle => battle.entries)),
+      addNewPerformances(battleResults.flatMap(battle => battle.performances)),
+      // Update each band with buzz awarded.
+      addBandsBuzz(battleResults.flatMap(battle => battle.entries
+        .map(({ bandId, buzzAwarded }) => ({ bandId, buzz: buzzAwarded }))))
         .then(() => setWeeklyBuzz(weekId)),
     ]);
-
-    return week;
   });
 }

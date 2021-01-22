@@ -34,7 +34,6 @@ SELECT
             SELECT
               json_agg(json_build_object(
                 'place', entry.place,
-                'buzz_start', entry.buzz_start,
                 'buzz_awarded', entry.buzz_awarded,
                 'band', json_build_object(
                   'id', band.id,

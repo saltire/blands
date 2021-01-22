@@ -41,6 +41,10 @@ p {
   white-space: nowrap;
 }
 
+b {
+  font-weight: 600;
+}
+
 a {
   color: inherit;
 }

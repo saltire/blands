@@ -4,7 +4,7 @@ import morgan from 'morgan';
 import path from 'path';
 
 import { generateWeeks } from './battle';
-import { createTables, getWeekSummaries, getBattleSummary, getBandSummary } from './db';
+import { createTables, getWeekSummaries, getBattleSummary, getBandSummary, halveBuzz } from './db';
 import { getBandNameGenerator, getSongNameGenerator } from './generator';
 
 
@@ -35,6 +35,10 @@ router.get('/band/:id', async (req, res) => {
 });
 router.get('/band/:id/json', async (req, res) => {
   res.json({ band: await getBandSummary(Number(req.params.id)) });
+});
+
+router.get('/test', async (req, res) => {
+  res.json(await halveBuzz());
 });
 
 router.get('/admin', async (req, res) => {

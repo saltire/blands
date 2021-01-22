@@ -2,6 +2,8 @@ SELECT
   band.id,
   band.name,
   band.color,
+  band.buzz,
+  band.level,
   (
     SELECT
       json_agg(json_build_object(
