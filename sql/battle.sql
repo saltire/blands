@@ -3,30 +3,29 @@ SELECT
   (
     SELECT
       json_agg(json_build_object(
-        'performances', (
-          SELECT
-            json_agg(json_build_object(
-              'band', json_build_object(
-                'id', band.id,
-                'name', band.name,
-                'color', band.color
-              ),
-              'song', json_build_object(
-                'id', song.id,
-                'name', song.name
-              ),
-              'score', performance.score
-            ) ORDER BY performance.score DESC) AS performances
-          FROM performance
-          JOIN band ON band.id = performance.band_id
-          JOIN song ON song.id = performance.song_id
-          WHERE performance.battle_id = round.battle_id AND performance.round_index = round.index
-          GROUP BY performance.battle_id, performance.round_index
-        )
-      ) ORDER BY round.index ASC) as rounds
-    FROM round
-    WHERE round.battle_id = battle.id
-    GROUP BY round.battle_id
+        'performances', performances_by_round.performances
+      ) ORDER BY performances_by_round.round_index ASC) AS rounds
+    FROM (
+      SELECT
+        performance.round_index,
+        json_agg(json_build_object(
+          'band', json_build_object(
+            'id', band.id,
+            'name', band.name,
+            'color', band.color
+          ),
+          'song', json_build_object(
+            'id', song.id,
+            'name', song.name
+          ),
+          'score', performance.score
+        ) ORDER BY performance.score DESC) AS performances
+      FROM performance
+      JOIN band ON band.id = performance.band_id
+      JOIN song ON song.id = performance.song_id
+      WHERE performance.battle_id = battle.id
+      GROUP BY performance.round_index
+    ) performances_by_round
   ),
   (
     SELECT json_agg(json_build_object(

@@ -123,18 +123,9 @@ export type Entry = {
   buzzAwarded?: number,
 }
 
-const round = defineTable({
-  battleId: integer().notNull().references(battle, 'id'),
-  index: serial().notNull().default("nextval('round_index_seq')"),
-});
-export type Round = {
-  battleId: number,
-  index: number,
-}
-
 const performance = defineTable({
   battleId: integer().notNull().references(battle, 'id'),
-  roundIndex: integer().notNull().references(round, 'index'),
+  roundIndex: integer().notNull(),
   bandId: integer().notNull().references(band, 'id'),
   songId: integer().notNull().references(song, 'id'),
   score: integer().notNull(),
@@ -148,7 +139,7 @@ export type Performance = {
 }
 
 
-const db = defineDb({ band, song, week, battle, entry, round, performance },
+const db = defineDb({ band, song, week, battle, entry, performance },
   async (query, parameters) => {
     // console.log(query);
     const { rowCount, rows } = await pool.query(query, parameters);
@@ -238,12 +229,6 @@ export async function addNewEntries(entries: Entry[]) {
   return db
     .insertInto(db.entry)
     .values(entries);
-}
-
-export async function addNewRounds(rounds: Round[]) {
-  return db
-    .insertInto(db.round)
-    .values(rounds);
 }
 
 export async function addNewPerformances(performances: Performance[]) {

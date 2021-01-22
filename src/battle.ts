@@ -1,6 +1,6 @@
 import {
   addNewBands, addBandsBuzz, getBandIdsAtLevel, addNewSongs, getBandsSongIds,
-  addNewWeek, addNewBattles, addNewEntries, addNewPerformances, addNewRounds,
+  addNewWeek, addNewBattles, addNewEntries, addNewPerformances,
   halveBuzz, setWeeklyBuzz,
 } from './db';
 import { getBandGenerator, getSongNameGenerator } from './generator';
@@ -86,13 +86,6 @@ export async function generateWeeks(options?: WeeksOptions) {
       // TODO: get a random selection of each band's songs from the db, instead of all songs.
       const songIdsByBandId = Object.fromEntries((await getBandsSongIds(bandIds))
         .map(({ bandId, songIds }) => [bandId, songIds]));
-
-      // Add this battle's rounds to the db.
-      // TODO: rounds don't really need a table at all; modify queries not to use them.
-      await addNewRounds(range(bandIds.length - 1).map(index => ({
-        battleId,
-        index,
-      })));
 
       // Generate performances for each round.
       const performances = range(bandIds.length - 1).flatMap(roundIndex => {

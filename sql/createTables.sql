@@ -37,18 +37,11 @@ CREATE TABLE IF NOT EXISTS entry (
   PRIMARY KEY (battle_id, band_id)
 );
 
-CREATE TABLE IF NOT EXISTS round (
-  battle_id integer NOT NULL REFERENCES battle (id),
-  index serial NOT NULL,
-  PRIMARY KEY (battle_id, index)
-);
-
 CREATE TABLE IF NOT EXISTS performance (
-  battle_id integer NOT NULL,
+  battle_id integer NOT NULL REFERENCES battle (id),
   round_index integer NOT NULL,
   band_id integer NOT NULL REFERENCES band (id),
   song_id integer NOT NULL REFERENCES song (id),
   score integer NOT NULL,
-  FOREIGN KEY (battle_id, round_index) REFERENCES round (battle_id, index),
   PRIMARY KEY (battle_id, round_index, band_id)
 );
