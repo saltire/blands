@@ -35,6 +35,10 @@ function getTableNames(tablesQuery: string) {
   return Array.from(tablesQuery.matchAll(/CREATE TABLE IF NOT EXISTS (\w+)/g)).map(m => m[1]);
 }
 
+export async function createFunctions() {
+  return runQuery('createFunctions');
+}
+
 export async function createTables(dropTables?: boolean) {
   const tablesQuery = (await queriesPromise).createTables;
   const tables = getTableNames(tablesQuery);
@@ -306,6 +310,19 @@ interface BandSummary {
   songs: {
     id: number,
     name: string,
+  }[],
+  battles: {
+    id: number,
+    week_id: number,
+    level: number,
+    place: number,
+    band_count: number,
+  }[],
+  weekly_buzz: {
+    week_id: number,
+    buzz: number,
+    level: number,
+    rank: number,
   }[],
 }
 export async function getBandSummary(id: number): Promise<BandSummary[]> {

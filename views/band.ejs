@@ -15,5 +15,15 @@
     <% band.songs.forEach(song => { %>
       <p><%= song.name %></p>
     <% }); %>
+
+    <h2>Battles</h2>
+    <% band.battles.forEach(battle => { %>
+      <p>Week <%= battle.week_id %>: <a href='/battle/<%= battle.id %>'>Battle #<%= battle.id %></a> (<%= battle.place %>/<%= battle.band_count %>)</p>
+    <% }); %>
+
+    <h2>Weekly Buzz</h2>
+    <% band.weekly_buzz.forEach(weeklyBuzz => { %>
+      <p>Week <%= weeklyBuzz.week_id %>: <%= weeklyBuzz.buzz %>, Level <%= weeklyBuzz.level %> (#<%= weeklyBuzz.rank %>)</p>
+    <% }) %>
   </body>
 </html>

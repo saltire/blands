@@ -1,10 +1,9 @@
 SELECT
   battle.id,
   (
-    SELECT
-      json_agg(json_build_object(
-        'performances', performances_by_round.performances
-      ) ORDER BY performances_by_round.round_index ASC) AS rounds
+    SELECT json_agg(json_build_object(
+      'performances', performances_by_round.performances
+    ) ORDER BY performances_by_round.round_index ASC) AS rounds
     FROM (
       SELECT
         performance.round_index,
@@ -39,7 +38,6 @@ SELECT
     FROM entry
     JOIN band ON band.id = entry.band_id
     WHERE entry.battle_id = battle.id
-    GROUP BY entry.battle_id
   )
 FROM battle
 WHERE battle.id = $1
