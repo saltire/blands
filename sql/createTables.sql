@@ -1,7 +1,8 @@
 CREATE TABLE IF NOT EXISTS band (
   id serial NOT NULL PRIMARY KEY,
   name text NOT NULL,
-  color text NOT NULL,
+  color_light text NOT NULL,
+  color_dark text NOT NULL,
   buzz integer NOT NULL DEFAULT 0,
   level integer NOT NULL DEFAULT 1
 );

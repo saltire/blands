@@ -11,7 +11,8 @@ SELECT
           'band', json_build_object(
             'id', band.id,
             'name', band.name,
-            'color', band.color
+            'color_light', band.color_light,
+            'color_dark', band.color_dark
           ),
           'song', json_build_object(
             'id', song.id,
@@ -32,7 +33,8 @@ SELECT
       'band', json_build_object(
         'id', band.id,
         'name', band.name,
-        'color', band.color
+        'color_light', band.color_light,
+        'color_dark', band.color_dark
       )
     ) ORDER BY entry.place ASC) AS bands
     FROM entry

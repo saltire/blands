@@ -44,7 +44,7 @@ export async function createTables(dropTables?: boolean) {
   const tables = getTableNames(tablesQuery);
 
   return pool.query([
-    ...dropTables ? tables.map(table => `DROP TABLE ${table} CASCADE`) : [],
+    ...dropTables ? tables.map(table => `DROP TABLE IF EXISTS ${table} CASCADE`) : [],
     tablesQuery,
   ].join('; '));
 }
@@ -62,13 +62,15 @@ export async function clearTables() {
 const band = defineTable({
   id: serial().notNull().primaryKey().default("nextval('band_id_seq')"),
   name: text().notNull(),
-  color: text().notNull(),
+  colorLight: text().notNull(),
+  colorDark: text().notNull(),
   buzz: integer().notNull().default('0'),
   level: integer().notNull().default('1'),
 });
 export type NewBand = {
   name: string,
-  color: string,
+  colorLight: string,
+  colorDark: string,
   level: number,
   buzz: number,
 }
@@ -249,7 +251,8 @@ interface WeekSummary {
   top_bands: {
     id: number,
     name: string,
-    color: string,
+    colorLight: string,
+    colorDark: string,
     buzz: number,
     rank: number,
   }[],
@@ -263,7 +266,8 @@ interface WeekSummary {
         band: {
           id: number,
           name: string,
-          color: string,
+          colorLight: string,
+          colorDark: string,
         },
       }[],
     }[],
@@ -281,7 +285,8 @@ interface BattleSummary {
       band: {
         id: number,
         name: string,
-        color: string,
+        colorLight: string,
+        colorDark: string,
       },
       song: {
         id: number,
@@ -293,7 +298,8 @@ interface BattleSummary {
   bands: {
     id: number,
     name: string,
-    color: string,
+    colorLight: string,
+    colorDark: string,
   }[],
 }
 export async function getBattleSummary(id: number): Promise<BattleSummary[]> {
@@ -304,7 +310,8 @@ export async function getBattleSummary(id: number): Promise<BattleSummary[]> {
 interface BandSummary {
   id: number,
   name: string,
-  color: string,
+  colorLight: string,
+  colorDark: string,
   buzz: number,
   level: number,
   songs: {

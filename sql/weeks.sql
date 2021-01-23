@@ -4,7 +4,8 @@ SELECT
     SELECT json_agg(json_build_object(
       'id', band.id,
       'name', band.name,
-      'color', band.color,
+      'color_light', band.color_light,
+      'color_dark', band.color_dark,
       'buzz', weekly_buzz_ranked.buzz,
       'rank', weekly_buzz_ranked.rank
     ) ORDER BY weekly_buzz_ranked.rank ASC, band.name ASC) as top_bands
@@ -34,7 +35,8 @@ SELECT
               'band', json_build_object(
                 'id', band.id,
                 'name', band.name,
-                'color', band.color
+                'color_light', band.color_light,
+                'color_dark', band.color_dark
               )
             ) ORDER BY entry.place ASC) AS entries
             FROM entry

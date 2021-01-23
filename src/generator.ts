@@ -1,5 +1,5 @@
 import { NewBand } from './db';
-import { generateColor } from './color';
+import { generateColorScheme } from './color';
 import { readCsv, csvToMap } from './csv';
 import { pick } from './utils';
 
@@ -48,10 +48,12 @@ export async function getBandGenerator(): Promise<Generator<NewBand>> {
   return {
     generate(config?: BandGeneratorConfig): NewBand {
       const { level } = { level: 1, ...config };
+      const { light, dark } = generateColorScheme();
 
       return {
         name: bandNameGen.generate(),
-        color: generateColor(),
+        colorLight: light,
+        colorDark: dark,
         level,
         buzz: 10 ** level,
       };

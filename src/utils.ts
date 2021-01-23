@@ -9,6 +9,9 @@ export const pick = <T>(array: T[]) => array[Math.floor(Math.random() * array.le
 export const pickOut = <T>(array: T[]) => array.splice(Math.floor(Math.random() * array.length), 1)
   .pop();
 
+export const random = ({ min = 0, max = 1 }: { min?: number, max?: number } = {}): number => (
+  (Math.random() * (max - min)) + min);
+
 export const range = (length: number) => [...Array(length).keys()];
 
 export const shuffle = <T>(array: T[]) => {

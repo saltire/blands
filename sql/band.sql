@@ -1,7 +1,8 @@
 SELECT
   band.id,
   band.name,
-  band.color,
+  band.color_light,
+  band.color_dark,
   band.buzz,
   band.level,
   (
