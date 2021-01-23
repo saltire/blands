@@ -9,7 +9,6 @@ interface GeneratorConfig {}
 export interface Generator<T> {
   generate: (config?: GeneratorConfig) => T,
 }
-
 export async function getGenerator(csvPath: string, capitalize?: boolean):
 Promise<Generator<string>> {
   const map = await readCsv(csvPath).then(csvToMap);
@@ -38,24 +37,24 @@ export async function getSongNameGenerator() {
 }
 
 interface BandGeneratorConfig extends GeneratorConfig {
+  weekId?: number,
   level?: number,
-  songCount?: number,
 }
-
 export async function getBandGenerator(): Promise<Generator<NewBand>> {
   const bandNameGen = await getBandNameGenerator();
 
   return {
-    generate(config?: BandGeneratorConfig): NewBand {
-      const { level } = { level: 1, ...config };
+    generate({ weekId = 1, level = 1 }: BandGeneratorConfig = {}): NewBand {
       const { light, dark } = generateColorScheme();
 
       return {
         name: bandNameGen.generate(),
         colorLight: light,
         colorDark: dark,
-        level,
         buzz: 10 ** level,
+        level,
+        startWeekId: weekId,
+        startLevel: level,
       };
     },
   };

@@ -59,6 +59,17 @@ export async function clearTables() {
 // Current version of mammoth doesn't support creating rows without specifying the serial value.
 // Remove 'default' call once fix is released.
 
+const week = defineTable({
+  id: serial().notNull().primaryKey().default("nextval('week_id_seq')"),
+  date: date(),
+});
+export type NewWeek = {
+  date?: Date,
+}
+export type Week = NewWeek & {
+  id: number,
+}
+
 const band = defineTable({
   id: serial().notNull().primaryKey().default("nextval('band_id_seq')"),
   name: text().notNull(),
@@ -66,13 +77,17 @@ const band = defineTable({
   colorDark: text().notNull(),
   buzz: integer().notNull().default('0'),
   level: integer().notNull().default('1'),
+  startWeekId: integer().notNull().references(week, 'id'),
+  startLevel: integer().notNull().default('1'),
 });
 export type NewBand = {
   name: string,
   colorLight: string,
   colorDark: string,
-  level: number,
   buzz: number,
+  level: number,
+  startWeekId: number,
+  startLevel: number,
 }
 export type Band = NewBand & {
   id: number,
@@ -88,17 +103,6 @@ export type NewSong = {
   name: string,
 }
 export type Song = NewSong & {
-  id: number,
-}
-
-const week = defineTable({
-  id: serial().notNull().primaryKey().default("nextval('week_id_seq')"),
-  date: date(),
-});
-export type NewWeek = {
-  date?: Date,
-}
-export type Week = NewWeek & {
   id: number,
 }
 

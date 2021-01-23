@@ -1,20 +1,22 @@
+CREATE TABLE IF NOT EXISTS week (
+  id serial NOT NULL PRIMARY KEY
+);
+
 CREATE TABLE IF NOT EXISTS band (
   id serial NOT NULL PRIMARY KEY,
   name text NOT NULL,
   color_light text NOT NULL,
   color_dark text NOT NULL,
   buzz integer NOT NULL DEFAULT 0,
-  level integer NOT NULL DEFAULT 1
+  level integer NOT NULL DEFAULT 1,
+  start_week_id integer NOT NULL REFERENCES week (id),
+  start_level integer NOT NULL DEFAULT 1
 );
 
 CREATE TABLE IF NOT EXISTS song (
   id serial NOT NULL PRIMARY KEY,
   band_id integer NOT NULL REFERENCES band (id),
   name text NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS week (
-  id serial NOT NULL PRIMARY KEY
 );
 
 CREATE TABLE IF NOT EXISTS weekly_buzz (

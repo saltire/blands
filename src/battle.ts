@@ -55,7 +55,7 @@ export async function generateWeeks(options?: WeeksOptions) {
       const newBandCount = Math.max(0, minBandCount - enteringBandIds.length);
       if (newBandCount) {
         const newBandIds = await addNewBands(range(newBandCount)
-          .map(() => bandGen.generate({ level })));
+          .map(() => bandGen.generate({ weekId, level })));
         enteringBandIds.push(...newBandIds);
 
         await addNewSongs(newBandIds.flatMap(newBandId => range(songCount)

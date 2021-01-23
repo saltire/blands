@@ -14,8 +14,8 @@
 
     <script>
       const bands = <%- bands %>;
-      const weekCount = Math.max(...bands.map(band => band.weeks.length));
-      const weekIds = [...Array(weekCount).keys()].map(i => i + 1);
+      const maxWeek = Math.max(...bands.flatMap(band => band.weeks.map(w => w.id)));
+      const weekIds = [...Array(maxWeek + 1).keys()];
       const maxBuzz = Math.max(...bands.flatMap(band => band.weeks.map(w => w.buzz)));
       const maxLevel = 5;
 
@@ -29,7 +29,7 @@
         .style('overflow', 'visible');
 
       const x = d3.scaleLinear()
-        .domain([1, weekCount])
+        .domain([0, maxWeek])
         .range([margin.left, width - margin.right]);
 
       const y = d3.scaleLog()
@@ -40,7 +40,7 @@
       // x axis
       svg.append('g')
         .attr('transform', `translate(0,${height - margin.bottom})`)
-        .call(d3.axisBottom(x).ticks(weekCount).tickSizeOuter(0));
+        .call(d3.axisBottom(x).ticks(maxWeek + 1).tickSizeOuter(0));
 
       // y axis
       svg.append('g')
@@ -51,7 +51,7 @@
         }));
 
       const line = d3.line()
-        .x(week => x(week.week_id))
+        .x(week => x(week.id))
         .y(week => y(week.buzz));
 
       const path = svg.append('g')
@@ -60,7 +60,7 @@
         .join('path')
           .attr('fill', 'none')
           .attr('stroke', band => band.color)
-          .attr('stroke-width', 1)
+          .attr('stroke-width', 0.5)
           .attr('stroke-linejoin', 'round')
           .attr('stroke-linecap', 'round')
           .attr('d', band => line(band.weeks));
@@ -82,11 +82,13 @@
         const pointer = d3.pointer(event, this);
         const mx = x.invert(pointer[0]);
         const my = y.invert(pointer[1]);
-        const weekId = weekIds[d3.bisectCenter(weekIds, mx)];
-        const hoverBand = d3.least(bands, band => Math.abs((band.weeks.find(w => w.week_id === weekId)?.buzz ?? Infinity) - my));
-        path.attr('stroke', band => band === hoverBand ? band.color : '#333')
+        const weekId = d3.bisectCenter(weekIds, mx);
+        const hoverBand = d3.least(bands, band => Math.abs((band.weeks.find(w => w.id === weekId)?.buzz ?? Infinity) - my));
+        path
+          .attr('stroke', band => band === hoverBand ? band.color : '#333')
+          .attr('stroke-width', band => band === hoverBand ? 2 : 0.5)
           .filter(band => band === hoverBand).raise();
-        dot.attr('transform', `translate(${x(weekId)},${y(hoverBand.weeks.find(w => w.week_id === weekId).buzz)})`);
+        dot.attr('transform', `translate(${x(weekId)},${y(hoverBand.weeks.find(w => w.id === weekId).buzz)})`);
         dot.select('text').text(hoverBand.name);
       }
 
@@ -96,7 +98,7 @@
       }
 
       function onLeave() {
-        path.attr('stroke', band => band.color);
+        path.attr('stroke', band => band.color).attr('stroke-width', 0.5);
         dot.attr('display', 'none');
       }
 
