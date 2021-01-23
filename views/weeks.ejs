@@ -18,10 +18,10 @@
     <% } %>
     <div class='flex'>
       <% weeks.forEach(week => { %>
-        <div>
+        <div class='week'>
           <h1>Week <%= week.id %></h1>
 
-          <h2>Top 10 Bands</h2>
+          <h2><a href='/bands'>Top 10 Bands</a></h2>
           <% week.top_bands.forEach(band => { %>
             <p><%= band.rank %>. <%- include('bandname', { band }) %> - <%= band.buzz %></p>
           <% }); %>

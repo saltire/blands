@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <title>Blattle of the Blands</title>
+    <link rel='stylesheet' href='/style.css'>
+  </head>
+  <body>
+    <header><h1>Bands</h1></header>
+
+    <main>
+      <% bands.forEach(band => { %>
+        <a class='band-block' href='/band/<%= band.id %>' style='color: <%= band.color_light %>; background-color: <%= band.color_dark %>'><%= band.name %></a>
+      <% }); %>
+    </main>
+  </body>
+</html>

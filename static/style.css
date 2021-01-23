@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;450;600;750;900&display=swap');
 
 body {
+  margin: 0;
   background: black;
   color: white;
   font-family: Jost, sans-serif;
@@ -8,12 +9,21 @@ body {
   overflow-x: scroll;
 }
 
+header, main {
+  padding: 0 20px;
+}
+
 header form {
   display: inline-block;
 }
 
-h1, h2, h3 {
-  margin: 2rem 0 1rem;
+.band-header {
+  margin-bottom: 20px;
+  overflow: auto;
+}
+
+h1, h2, h3, h4, h5 {
+  margin: 1em 0 .5em;
 }
 
 h1 {
@@ -32,8 +42,21 @@ h4 {
   font-weight: 450;
 }
 
+h5 {
+  font-weight: 300;
+}
+
 .pad {
   margin-bottom: 1.5em;
+}
+
+.week {
+  padding: 0 20px;
+}
+
+.week:not(:last-child) {
+  margin-right: 10px;
+  border-right: 1px dotted #666;
 }
 
 p {
@@ -50,7 +73,24 @@ a {
 }
 
 a.band {
+  font-weight: 450;
   text-decoration: none;
+}
+
+a.band-block {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 10em;
+  height: 5em;
+  margin: 0 15px 15px 0;
+  padding: 10px;
+  font-size: 36px;
+  font-weight: 750;
+  line-height: 1.2em;
+  text-align: center;
+  text-decoration: none;
+  vertical-align: top;
 }
 
 input, button {

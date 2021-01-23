@@ -57,7 +57,7 @@ export function generateColorScheme() {
     v: lv,
   }));
 
-  const dv = random({ max: lv - 0.3 }); // Make sure it's darker.
+  const dv = random({ min: 0.05, max: lv - 0.3 }); // Make sure it's darker.
   const dark = rgb2hex(hsv2rgb({
     h: random(),
     s: random({ min: Math.max(0, dv - 0.3) }), // Higher values need slightly higher saturation.

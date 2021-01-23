@@ -5,7 +5,7 @@ import path from 'path';
 
 import { generateWeeks } from './battle';
 import {
-  createFunctions, createTables, getWeekSummaries, getBattleSummary, getBandSummary,
+  createFunctions, createTables, getWeekSummaries, getBattleSummary, getBandSummary, getBands,
 } from './db';
 import { getBandNameGenerator, getSongNameGenerator } from './generator';
 
@@ -37,6 +37,13 @@ router.get('/band/:id', async (req, res) => {
 });
 router.get('/band/:id/json', async (req, res) => {
   res.json({ band: await getBandSummary(Number(req.params.id)) });
+});
+
+router.get('/bands', async (req, res) => {
+  res.render('bands', { bands: await getBands() });
+});
+router.get('/bands/json', async (req, res) => {
+  res.json({ bands: await getBands() });
 });
 
 router.get('/admin', async (req, res) => {

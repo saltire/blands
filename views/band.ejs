@@ -6,24 +6,28 @@
     <link rel='stylesheet' href='/style.css'>
   </head>
   <body>
-    <h1><%- include('bandname', { band }) %></h1>
+    <header class='band-header' style='background-color: <%= band.color_dark %>'>
+      <h1 style='color: <%= band.color_light %>'><%= band.name %></h1>
+    </header>
 
-    <p><b>Level:</b> <%= band.level %></p>
-    <p><b>Buzz:</b> <%= band.buzz %></p>
+    <main>
+      <p><b>Level:</b> <%= band.level %></p>
+      <p><b>Buzz:</b> <%= band.buzz %></p>
 
-    <h2>Songs</h2>
-    <% band.songs.forEach(song => { %>
-      <p><%= song.name %></p>
-    <% }); %>
+      <h2>Songs</h2>
+      <% band.songs.forEach(song => { %>
+        <p><%= song.name %></p>
+      <% }); %>
 
-    <h2>Battles</h2>
-    <% band.battles.forEach(battle => { %>
-      <p>Week <%= battle.week_id %>: <a href='/battle/<%= battle.id %>'>Battle #<%= battle.id %></a> (<%= battle.place %>/<%= battle.band_count %>)</p>
-    <% }); %>
+      <h2>Battles</h2>
+      <% band.battles.forEach(battle => { %>
+        <p>Week <%= battle.week_id %>: <a href='/battle/<%= battle.id %>'>Battle #<%= battle.id %></a> (<%= battle.place %>/<%= battle.band_count %>)</p>
+      <% }); %>
 
-    <h2>Weekly Buzz</h2>
-    <% band.weekly_buzz.forEach(weeklyBuzz => { %>
-      <p>Week <%= weeklyBuzz.week_id %>: <%= weeklyBuzz.buzz %>, Level <%= weeklyBuzz.level %> (#<%= weeklyBuzz.rank %>)</p>
-    <% }) %>
+      <h2>Weekly Buzz</h2>
+      <% band.weekly_buzz.forEach(weeklyBuzz => { %>
+        <p>Week <%= weeklyBuzz.week_id %>: <%= weeklyBuzz.buzz %>, Level <%= weeklyBuzz.level %> (#<%= weeklyBuzz.rank %>)</p>
+      <% }) %>
+    </main>
   </body>
 </html>

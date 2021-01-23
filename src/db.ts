@@ -1,4 +1,4 @@
-import { arrayAgg, coalesce, date, defineDb, defineTable, integer, serial, text } from '@ff00ff/mammoth';
+import { arrayAgg, coalesce, date, defineDb, defineTable, integer, serial, star, text } from '@ff00ff/mammoth';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { Pool, QueryResult } from 'pg';
@@ -211,6 +211,13 @@ export async function getBandsSongIds(bandIds: number[]): Promise<BandSongIds[]>
     .from(db.song)
     .where(db.song.bandId.in(bandIds))
     .groupBy(db.song.bandId);
+}
+
+export async function getBands(): Promise<Band[]> {
+  return db
+    .select(star())
+    .from(db.band)
+    .orderBy(db.band.buzz.desc());
 }
 
 export async function addNewWeek(): Promise<number> {
