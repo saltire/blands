@@ -6,6 +6,7 @@ import path from 'path';
 import { generateWeeks } from './battle';
 import {
   createFunctions, createTables, getWeekSummaries, getBattleSummary, getBandSummary, getBands,
+  getAllWeeklyBuzz,
 } from './db';
 import { getBandNameGenerator, getSongNameGenerator } from './generator';
 
@@ -44,6 +45,13 @@ router.get('/bands', async (req, res) => {
 });
 router.get('/bands/json', async (req, res) => {
   res.json({ bands: await getBands() });
+});
+
+router.get('/graph', async (req, res) => {
+  res.render('graph', { bands: JSON.stringify(await getAllWeeklyBuzz()) });
+});
+router.get('/graph/json', async (req, res) => {
+  res.json({ data: await getAllWeeklyBuzz() });
 });
 
 router.get('/admin', async (req, res) => {

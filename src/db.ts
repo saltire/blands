@@ -102,6 +102,17 @@ export type Week = NewWeek & {
   id: number,
 }
 
+const weeklyBuzz = defineTable({
+  weekId: integer().notNull().references(week, 'id'),
+  bandId: integer().notNull().references(band, 'id'),
+  buzz: integer().notNull().default('0'),
+});
+export type WeeklyBuzz = {
+  weekId: number,
+  bandId: number,
+  buzz: number,
+}
+
 const battle = defineTable({
   id: serial().notNull().primaryKey().default("nextval('battle_id_seq')"),
   weekId: integer().notNull().references(week, 'id'),
@@ -145,7 +156,7 @@ export type Performance = {
 }
 
 
-const db = defineDb({ band, song, week, battle, entry, performance },
+const db = defineDb({ band, song, week, weeklyBuzz, battle, entry, performance },
   async (query, parameters) => {
     // console.log(query);
     const { rowCount, rows } = await pool.query(query, parameters);
@@ -342,4 +353,9 @@ interface BandSummary {
 export async function getBandSummary(id: number): Promise<BandSummary[]> {
   const { rows } = await runQuery('band', [id]);
   return rows[0];
+}
+
+export async function getAllWeeklyBuzz() {
+  const { rows } = await runQuery('allWeeklyBuzz');
+  return rows;
 }

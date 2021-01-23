@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <title>Blattle of the Blands</title>
+    <link rel='stylesheet' href='/style.css'>
+    <script src='https://d3js.org/d3.v6.min.js'></script>
+  </head>
+  <body>
+    <header><h1>Weekly Buzz</h1></header>
+
+    <main>
+    </main>
+
+    <script>
+      const bands = <%- bands %>;
+      const weekCount = Math.max(...bands.map(band => band.weeks.length));
+      const weekIds = [...Array(weekCount).keys()].map(i => i + 1);
+      const maxBuzz = Math.max(...bands.flatMap(band => band.weeks.map(w => w.buzz)));
+      const maxLevel = 5;
+
+      const width = 1000;
+      const height = 600;
+      const margin = { top: 20, right: 20, bottom: 30, left: 30 };
+
+      const svg = d3.selectAll('main')
+        .append('svg')
+        .attr('viewBox', [0, 0, width, height])
+        .style('overflow', 'visible');
+
+      const x = d3.scaleLinear()
+        .domain([1, weekCount])
+        .range([margin.left, width - margin.right]);
+
+      const y = d3.scaleLog()
+        .domain([10, maxBuzz])
+        .range([height - margin.bottom, margin.top])
+        .nice();
+
+      // x axis
+      svg.append('g')
+        .attr('transform', `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(x).ticks(weekCount).tickSizeOuter(0));
+
+      // y axis
+      svg.append('g')
+        .attr('transform', `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y).ticks(maxLevel, buzz => {
+          const level = Math.log10(buzz);
+          return level > maxLevel ? '' : level;
+        }));
+
+      const line = d3.line()
+        .x(week => x(week.week_id))
+        .y(week => y(week.buzz));
+
+      const path = svg.append('g')
+        .selectAll('path')
+        .data(bands)
+        .join('path')
+          .attr('fill', 'none')
+          .attr('stroke', band => band.color)
+          .attr('stroke-width', 1)
+          .attr('stroke-linejoin', 'round')
+          .attr('stroke-linecap', 'round')
+          .attr('d', band => line(band.weeks));
+
+      const dot = svg.append('g')
+        .attr('display', 'none')
+        .call(g => g.append('circle')
+          .attr('stroke', 'white')
+          .attr('r', 2.5))
+        .call(g => g.append('text')
+          .attr('fill', 'white')
+          .attr('font-family', 'sans-serif')
+          .attr('font-size', 10)
+          .attr('text-anchor', 'middle')
+          .attr('y', -8));
+
+      function onMove(event) {
+        event.preventDefault();
+        const pointer = d3.pointer(event, this);
+        const mx = x.invert(pointer[0]);
+        const my = y.invert(pointer[1]);
+        const weekId = weekIds[d3.bisectCenter(weekIds, mx)];
+        const hoverBand = d3.least(bands, band => Math.abs((band.weeks.find(w => w.week_id === weekId)?.buzz ?? Infinity) - my));
+        path.attr('stroke', band => band === hoverBand ? band.color : '#333')
+          .filter(band => band === hoverBand).raise();
+        dot.attr('transform', `translate(${x(weekId)},${y(hoverBand.weeks.find(w => w.week_id === weekId).buzz)})`);
+        dot.select('text').text(hoverBand.name);
+      }
+
+      function onEnter() {
+        path.attr('stroke', '#333');
+        dot.attr('display', null);
+      }
+
+      function onLeave() {
+        path.attr('stroke', band => band.color);
+        dot.attr('display', 'none');
+      }
+
+      if ('ontouchstart' in document) {
+        svg
+          .style('-webkit-tap-highlight-color', 'transparent')
+          .on('touchmove', onMove)
+          .on('touchstart', onEnter)
+          .on('touchend', onLeave)
+      }
+      else {
+        svg
+          .on('mousemove', onMove)
+          .on('mouseenter', onEnter)
+          .on('mouseleave', onLeave);
+      }
+    </script>
+  </body>
+</html>
