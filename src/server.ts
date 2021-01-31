@@ -3,7 +3,7 @@ import Router from 'express-promise-router';
 import morgan from 'morgan';
 import path from 'path';
 
-import { generateWeeks } from './battle';
+import { generateWeek } from './battle';
 import {
   createFunctions, createTables, getWeekSummaries, getBattleSummary, getBandSummary, getBands,
   getAllWeeklyBuzz,
@@ -58,7 +58,7 @@ router.get('/admin', async (req, res) => {
   res.render('weeks', { weeks: await getWeekSummaries(), admin: true });
 });
 router.post('/admin/addWeek', async (req, res) => {
-  await generateWeeks({ weekCount: 1 });
+  await generateWeek();
   res.redirect('/admin');
 });
 router.post('/admin/clear', async (req, res) => {
