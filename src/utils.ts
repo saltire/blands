@@ -22,3 +22,7 @@ export const shuffle = <T>(array: T[]) => {
   }
   return shuffled;
 };
+
+export const pickOutMultiple = <T>(array: T[], count: number) => range(count)
+  .map(() => pickOut(array))
+  .filter(Boolean) as T[];

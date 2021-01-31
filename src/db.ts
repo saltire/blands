@@ -173,13 +173,17 @@ const db = defineDb({ band, song, week, weeklyBuzz, battle, entry, performance }
 export default db;
 
 
-export async function getBandIdsAtLevel(level: number): Promise<number[]> {
-  const bands = await db
-    .select(db.band.id)
+export async function getBandsAtLevel(level: number) {
+  return db
+    .select(db.band.id, db.band.name,
+      db
+        .select(db.entry.place.as('last_place'))
+        .from(db.entry)
+        .where(db.entry.bandId.eq(db.band.id))
+        .orderBy(db.entry.battleId.desc())
+        .limit(1))
     .from(db.band)
     .where(db.band.level.eq(level));
-
-  return bands.map(b => b.id);
 }
 
 export async function addNewBands(newBands: NewBand[]): Promise<number[]> {

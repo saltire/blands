@@ -66,6 +66,11 @@ router.post('/admin/clear', async (req, res) => {
   await createTables(true);
   res.redirect('/admin');
 });
+router.get('/admin/clear', async (req, res) => {
+  await createFunctions();
+  await createTables(true);
+  res.redirect('/admin');
+});
 
 router.get('/band', async (req, res) => {
   const bandGen = await getBandNameGenerator();

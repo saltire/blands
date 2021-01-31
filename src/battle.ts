@@ -1,10 +1,10 @@
 import {
-  addNewBands, addBandsBuzz, getBandIdsAtLevel, addNewSongs, getBandsSongIds,
+  addNewBands, addBandsBuzz, getBandsAtLevel, addNewSongs, getBandsSongIds,
   addNewWeek, addNewBattles, addNewEntries, addNewPerformances,
   halveBuzz, setWeeklyBuzz,
 } from './db';
 import { getBandGenerator, getSongNameGenerator } from './generator';
-import { mapSeries, pickOut, range, shuffle } from './utils';
+import { mapSeries, pickOut, pickOutMultiple, range, shuffle } from './utils';
 
 
 function getBuzzAwarded(levelBaseBuzz: number, index: number) {
@@ -40,20 +40,24 @@ export async function generateWeeks(options?: WeeksOptions) {
       const minBandCount = minBattleCount * battleSize;
 
       // Get all bands at this level.
-      const levelBandIds = await getBandIdsAtLevel(level);
+      const levelBands = await getBandsAtLevel(level);
+      const firstBandIds = levelBands.filter(band => band.last_place === 1).map(band => band.id);
 
-      // TODO: Bands that placed in top 3 last week are guaranteed a spot; pick these first.
-      // If this number exceeds the number of slots, add more battles at this level.
-      // For now, just use the minimum number.
-      const battleCount = minBattleCount;
+      // Bands that placed first in their last battle get picked first.
+      const enteringBandIds = pickOutMultiple(firstBandIds, minBandCount);
 
       // Pick from the remaining bands.
-      const enteringBandIds = range(minBandCount).map(() => pickOut(levelBandIds))
-        .filter(Boolean) as number[];
+      const otherBandIds = levelBands.map(band => band.id)
+        .filter(bandId => !enteringBandIds.includes(bandId));
+      enteringBandIds.push(...pickOutMultiple(otherBandIds, minBandCount - enteringBandIds.length));
+
+      // TODO: If the number of first-place bands exceeds the number of slots,
+      // add more battles at this level. For now, just use the minimum number.
+      const battleCount = minBattleCount;
 
       // If there are any slots remaining, generate new bands (and songs) to fill them.
-      const newBandCount = Math.max(0, minBandCount - enteringBandIds.length);
-      if (newBandCount) {
+      const newBandCount = minBandCount - enteringBandIds.length;
+      if (newBandCount > 0) {
         const newBandIds = await addNewBands(range(newBandCount)
           .map(() => bandGen.generate({ weekId, level })));
         enteringBandIds.push(...newBandIds);
