@@ -173,17 +173,27 @@ const db = defineDb({ band, song, week, weeklyBuzz, battle, entry, performance }
 export default db;
 
 
-export async function getBandsAtLevel(level: number) {
+interface BandCandidate {
+  id: number,
+  lastPlace?: number,
+}
+export async function getBandsAtLevel(level: number): Promise<BandCandidate[]> {
   return db
-    .select(db.band.id, db.band.name,
+    .select(db.band.id,
       db
-        .select(db.entry.place.as('last_place'))
+        .select(db.entry.place.as('lastPlace'))
         .from(db.entry)
         .where(db.entry.bandId.eq(db.band.id))
         .orderBy(db.entry.battleId.desc())
         .limit(1))
     .from(db.band)
     .where(db.band.level.eq(level));
+}
+
+export async function getFreeBandsAtLevel(weekId: number, minLevel: number):
+Promise<BandCandidate[]> {
+  const { rows } = await runQuery('freeBandsAtLevel', [weekId, minLevel]);
+  return rows.map(({ last_place: lastPlace, ...row }) => ({ ...row, lastPlace }));
 }
 
 export async function addNewBands(newBands: NewBand[]): Promise<number[]> {
@@ -261,6 +271,23 @@ export async function addNewEntries(entries: Entry[]) {
   return db
     .insertInto(db.entry)
     .values(entries);
+}
+
+export async function updateEntries(entries: Entry[]) {
+  const valueParams = entries
+    .map((_, i) => {
+      const i4 = i * 4;
+      return i === 0 ? '($1::int, $2::int, $3::int, $4::int)' :
+        `($${i4 + 1}, $${i4 + 2}, $${i4 + 3}, $${i4 + 4})`;
+    })
+    .join(', ');
+
+  return pool.query(
+    `UPDATE entry
+      SET place = e.place, buzz_awarded = e.buzz_awarded
+      FROM (VALUES ${valueParams}) AS e(battle_id, band_id, place, buzz_awarded)
+      WHERE entry.battle_id = e.battle_id AND entry.band_id = e.band_id;`,
+    entries.flatMap(e => [e.battleId, e.bandId, e.place, e.buzzAwarded]));
 }
 
 export async function addNewPerformances(performances: Performance[]) {
