@@ -1,5 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;450;600;750;900&display=swap');
 
+html.single {
+  height: 100%;
+}
+
+html.single body {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+html.single main {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   background: black;
@@ -100,4 +114,8 @@ input, button {
 
 .flex {
   display: flex;
+}
+
+svg {
+  max-height: 100%;
 }

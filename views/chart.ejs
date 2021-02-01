@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html class='single'>
   <head>
     <meta charset='utf-8'>
     <title>Blattle of the Blands</title>
@@ -20,13 +20,12 @@
       const maxLevel = 5;
 
       const width = 1000;
-      const height = 600;
+      const height = 400;
       const margin = { top: 20, right: 20, bottom: 30, left: 30 };
 
       const svg = d3.selectAll('main')
         .append('svg')
-        .attr('viewBox', [0, 0, width, height])
-        .style('overflow', 'visible');
+        .attr('viewBox', [0, 0, width, height]);
 
       const x = d3.scaleLinear()
         .domain([0, maxWeek])
@@ -40,15 +39,18 @@
       // x axis
       svg.append('g')
         .attr('transform', `translate(0,${height - margin.bottom})`)
-        .call(d3.axisBottom(x).ticks(maxWeek + 1).tickSizeOuter(0));
+        .call(d3.axisBottom(x)
+          .ticks(maxWeek + 1)
+          .tickSizeOuter(0));
 
       // y axis
       svg.append('g')
         .attr('transform', `translate(${margin.left},0)`)
-        .call(d3.axisLeft(y).ticks(maxLevel, buzz => {
-          const level = Math.log10(buzz);
-          return level > maxLevel ? '' : level;
-        }));
+        .call(d3.axisLeft(y)
+          .ticks(maxLevel, buzz => {
+            const level = Math.log10(buzz);
+            return level > maxLevel ? '' : level;
+          }));
 
       const line = d3.line()
         .x(week => x(week.id))
@@ -82,13 +84,18 @@
         const pointer = d3.pointer(event, this);
         const mx = x.invert(pointer[0]);
         const my = y.invert(pointer[1]);
+        // Find the closest week to the cursor's x position.
         const weekId = d3.bisectCenter(weekIds, mx);
-        const hoverBand = d3.least(bands, band => Math.abs((band.weeks.find(w => w.id === weekId)?.buzz ?? Infinity) - my));
+        // Find the band whose buzz is closest to the cursor's y position at the current week.
+        const hoverBand = d3.least(bands,
+          band => Math.abs((band.weeks.find(w => w.id === weekId)?.buzz ?? Infinity) - my));
         path
           .attr('stroke', band => band === hoverBand ? band.color : '#333')
           .attr('stroke-width', band => band === hoverBand ? 2 : 0.5)
           .filter(band => band === hoverBand).raise();
-        dot.attr('transform', `translate(${x(weekId)},${y(hoverBand.weeks.find(w => w.id === weekId).buzz)})`);
+        const dotX = x(weekId);
+        const dotY = y(hoverBand.weeks.find(w => w.id === weekId).buzz);
+        dot.attr('transform', `translate(${dotX},${dotY})`);
         dot.select('text').text(hoverBand.name);
       }
 

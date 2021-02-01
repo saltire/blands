@@ -47,10 +47,10 @@ router.get('/bands/json', async (req, res) => {
   res.json({ bands: await getBands() });
 });
 
-router.get('/graph', async (req, res) => {
-  res.render('graph', { bands: JSON.stringify(await getAllWeeklyBuzz()) });
+router.get('/chart', async (req, res) => {
+  res.render('chart', { bands: JSON.stringify(await getAllWeeklyBuzz()) });
 });
-router.get('/graph/json', async (req, res) => {
+router.get('/chart/json', async (req, res) => {
   res.json({ data: await getAllWeeklyBuzz() });
 });
 
