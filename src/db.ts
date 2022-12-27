@@ -3,6 +3,8 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { Pool, QueryResult } from 'pg';
 
+import { BattleSummary, BandSummary, WeekSummary } from './resultTypes';
+
 
 const connectionString = `${process.env.DATABASE_URL || ''}`;
 
@@ -299,92 +301,16 @@ export async function addNewPerformances(performances: Performance[]) {
 
 /* eslint-disable camelcase */
 
-interface WeekSummary {
-  id: number,
-  top_bands: {
-    id: number,
-    name: string,
-    colorLight: string,
-    colorDark: string,
-    buzz: number,
-    rank: number,
-  }[],
-  levels: {
-    level: number,
-    battles: {
-      id: number,
-      entries: {
-        place: number,
-        buzz_awarded: number,
-        band: {
-          id: number,
-          name: string,
-          colorLight: string,
-          colorDark: string,
-        },
-      }[],
-    }[],
-  }[],
-}
 export async function getWeekSummaries(): Promise<WeekSummary[]> {
   const { rows } = await runQuery('weeks');
   return rows;
 }
 
-interface BattleSummary {
-  id: number,
-  rounds: {
-    performances: {
-      band: {
-        id: number,
-        name: string,
-        colorLight: string,
-        colorDark: string,
-      },
-      song: {
-        id: number,
-        name: string,
-      },
-      score: number,
-    }[],
-  }[],
-  bands: {
-    id: number,
-    name: string,
-    colorLight: string,
-    colorDark: string,
-  }[],
-}
 export async function getBattleSummary(id: number): Promise<BattleSummary[]> {
   const { rows } = await runQuery('battle', [id]);
   return rows[0];
 }
 
-interface BandSummary {
-  id: number,
-  name: string,
-  colorLight: string,
-  colorDark: string,
-  buzz: number,
-  level: number,
-  songs: {
-    id: number,
-    name: string,
-  }[],
-  battles: {
-    id: number,
-    week_id: number,
-    level: number,
-    place: number,
-    band_count: number,
-  }[],
-  weekly_buzz: {
-    week_id: number,
-    buzz: number,
-    level: number,
-    rank: number,
-  }[],
-}
 export async function getBandSummary(id: number): Promise<BandSummary[]> {
   const { rows } = await runQuery('band', [id]);
   return rows[0];

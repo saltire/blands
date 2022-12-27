@@ -5,6 +5,7 @@ import path from 'path';
 
 import DatabaseSchema from './__generated__';
 import databaseSchema from './__generated__/schema.json';
+import { WeekSummary } from './resultTypes';
 
 
 export { sql };
@@ -20,11 +21,23 @@ export { band, battle, entry, performance, song, week, weeklyBuzz };
 
 const sqlDir = path.resolve(__dirname, '../sql');
 
-const getQuery = (filename: string) => sql.file(path.resolve(sqlDir, `${filename}.sql`));
+const getFileQuery = (filename: string) => sql.file(path.resolve(sqlDir, `${filename}.sql`));
 
-export const runQuery = (filename: string) => db.query(getQuery(filename));
+const runFileQuery = <T = any>(filename: string): Promise<T[]> => db.query(getFileQuery(filename));
 
 export const migrate = () => applyMigrations({
   connection: db,
   migrationsDirectory: path.resolve(sqlDir, 'migrations'),
 });
+
+// File queries
+
+export const clearAll = () => runFileQuery('clear');
+
+export const getWeekSummaries = () => runFileQuery<WeekSummary>('weeks');
+
+export const getAllWeeklyBuzz = () => runFileQuery('allWeeklyBuzz');
+
+// Built queries
+
+export const getBands = () => band(db).find().orderByDesc('buzz').all();
