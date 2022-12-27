@@ -2,11 +2,11 @@
   "name": "blands",
   "private": true,
   "engines": {
-    "node": "14"
+    "node": "18"
   },
   "scripts": {
     "start": "node built/server.js",
-    "watch": "nodemon -e ts,json,sql -x ts-node -- -r dotenv/config src/server.ts",
+    "watch": "nodemon -e ts,json,sql -x \"ts-node -r dotenv/config src/server.ts\"",
     "build": "tsc",
     "lint": "eslint ./src"
   },
@@ -22,15 +22,15 @@
     "@types/express": "^4.17.11",
     "@types/koa-static": "^4.0.1",
     "@types/morgan": "^1.9.2",
-    "@types/pg": "^7.14.7",
-    "@typescript-eslint/eslint-plugin": "^4.13.0",
-    "@typescript-eslint/parser": "^4.13.0",
-    "dotenv": "^8.2.0",
-    "eslint": "^7.18.0",
-    "eslint-config-airbnb-base": "^14.2.1",
+    "@types/pg": "^8.6.6",
+    "@typescript-eslint/eslint-plugin": "^5.47.1",
+    "@typescript-eslint/parser": "^5.47.1",
+    "dotenv": "^16.0.3",
+    "eslint": "^8.30.0",
+    "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.22.1",
     "nodemon": "^2.0.6",
-    "ts-node": "^9.1.1",
+    "ts-node": "^10.9.1",
     "typescript": "^4.1.3"
   }
 }
