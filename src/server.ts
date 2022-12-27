@@ -8,6 +8,7 @@ import {
   createFunctions, createTables, getWeekSummaries, getBattleSummary, getBandSummary, getBands,
   getAllWeeklyBuzz,
 } from './db';
+import { migrate } from './db2';
 import { getBandNameGenerator, getSongNameGenerator } from './generator';
 
 
@@ -69,6 +70,10 @@ router.post('/admin/clear', async (req, res) => {
 router.get('/admin/clear', async (req, res) => {
   await createFunctions();
   await createTables(true);
+  res.redirect('/admin');
+});
+router.get('/admin/migrate', async (req, res) => {
+  await migrate();
   res.redirect('/admin');
 });
 

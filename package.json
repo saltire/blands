@@ -8,9 +8,15 @@
     "start": "node built/server.js",
     "watch": "nodemon -e ts,json,sql -x \"ts-node -r dotenv/config src/server.ts\"",
     "build": "tsc",
-    "lint": "eslint ./src"
+    "lint": "eslint ./src",
+    "schema": "ts-node -r dotenv/config src/schema.ts",
+    "migrations": "pg-migrations apply --directory ./sql/migrations"
   },
   "dependencies": {
+    "@databases/pg": "^5.4.1",
+    "@databases/pg-migrations": "^5.0.1",
+    "@databases/pg-schema-cli": "^4.3.0",
+    "@databases/pg-typed": "^4.3.0",
     "@ff00ff/mammoth": "^1.2.0",
     "ejs": "^3.1.5",
     "express": "^4.17.1",
@@ -20,8 +26,8 @@
   },
   "devDependencies": {
     "@types/express": "^4.17.11",
-    "@types/koa-static": "^4.0.1",
     "@types/morgan": "^1.9.2",
+    "@types/node": "^18.11.18",
     "@types/pg": "^8.6.6",
     "@typescript-eslint/eslint-plugin": "^5.47.1",
     "@typescript-eslint/parser": "^5.47.1",
