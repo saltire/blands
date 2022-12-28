@@ -4,8 +4,9 @@ import morgan from 'morgan';
 import path from 'path';
 
 import { generateWeek } from './battle';
-import { getBattleSummary, getBandSummary } from './db';
-import { clearAll, getAllWeeklyBuzz, getBands, getWeekSummaries, migrate } from './db2';
+import {
+  clearAll, getAllWeeklyBuzz, getBands, getBandSummary, getBattleSummary, getWeekSummaries, migrate,
+} from './db2';
 import { getBandNameGenerator, getSongNameGenerator } from './generator';
 
 
