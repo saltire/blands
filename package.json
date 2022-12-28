@@ -9,8 +9,8 @@
     "watch": "nodemon -e ts,json,sql -x \"ts-node -r dotenv/config src/server.ts\"",
     "build": "tsc",
     "lint": "eslint ./src",
-    "schema": "ts-node -r dotenv/config src/schema.ts",
-    "migrations": "pg-migrations apply --directory ./sql/migrations"
+    "migrate": "ts-node -r dotenv/config src/scripts/migrate.ts",
+    "schema": "ts-node -r dotenv/config src/scripts/schema.ts"
   },
   "dependencies": {
     "@databases/pg": "^5.4.1",
