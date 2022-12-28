@@ -1,8 +1,8 @@
 export type BandSummary = {
   id: number,
   name: string,
-  colorLight: string,
-  colorDark: string,
+  color_light: string,
+  color_dark: string,
   buzz: number,
   level: number,
   songs: {
@@ -31,8 +31,8 @@ export type BattleSummary = {
       band: {
         id: number,
         name: string,
-        colorLight: string,
-        colorDark: string,
+        color_light: string,
+        color_dark: string,
       },
       song: {
         id: number,
@@ -44,8 +44,8 @@ export type BattleSummary = {
   bands: {
     id: number,
     name: string,
-    colorLight: string,
-    colorDark: string,
+    color_light: string,
+    color_dark: string,
   }[],
 };
 
@@ -54,8 +54,8 @@ export type WeekSummary = {
   top_bands: {
     id: number,
     name: string,
-    colorLight: string,
-    colorDark: string,
+    color_light: string,
+    color_dark: string,
     buzz: number,
     rank: number,
   }[],
@@ -69,8 +69,8 @@ export type WeekSummary = {
         band: {
           id: number,
           name: string,
-          colorLight: string,
-          colorDark: string,
+          color_light: string,
+          color_dark: string,
         },
       }[],
     }[],

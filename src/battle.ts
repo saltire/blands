@@ -1,8 +1,10 @@
 import {
-  addNewBands, addBandsBuzz, getBandsAtLevel, addNewSongs, getBandsSongIds,
-  addNewWeek, addNewBattles, addNewEntries, updateEntries, addNewPerformances,
-  halveBuzz, setWeeklyBuzz, getFreeBandsAtLevel,
+  addBandsBuzz, getBandsAtLevel, getBandsSongIds, updateEntries, halveBuzz, setWeeklyBuzz,
 } from './db';
+import {
+  addNewBands, addNewBattles, addNewEntries, addNewPerformances, addNewSongs, addNewWeek,
+  getFreeBandsAtLevel, NewPerformance,
+} from './db2';
 import { getBandGenerator, getSongNameGenerator } from './generator';
 import { mapSeries, pickOut, pickOutMultiple, range, shuffle } from './utils';
 
@@ -68,11 +70,12 @@ Promise<WeekBattle[]> {
       enteringBandIds.push(...newBandIds);
 
       await addNewSongs(newBandIds.flatMap(newBandId => range(songCount)
-        .map(() => ({ bandId: newBandId, name: songNameGen.generate() }))));
+        .map(() => ({ band_id: newBandId, name: songNameGen.generate() }))));
     }
 
     // Create the battles in the db.
-    const battleIds = await addNewBattles(range(battleCount).map(() => ({ weekId, level })));
+    const battleIds = await addNewBattles(range(battleCount)
+      .map(() => ({ week_id: weekId, level })));
 
     // Pick bands for each battle and return them.
     const levelBattles = battleIds.map(battleId => ({
@@ -85,8 +88,8 @@ Promise<WeekBattle[]> {
   })).flat();
 
   // Create new entries for all battles at all levels.
-  await addNewEntries(newBattles.flatMap(battle => battle.bandIds.map(bandId => (
-    { battleId: battle.battleId, bandId }))));
+  await addNewEntries(newBattles.flatMap(battle => battle.bandIds
+    .map(bandId => ({ battle_id: battle.battleId, band_id: bandId }))));
 
   return newBattles;
 }
@@ -105,8 +108,8 @@ Promise<WeekBattle[]> {
 
     // Get all bands at this level or higher who have not been entered yet.
     const levelBands = await getFreeBandsAtLevel(weekId, level);
-    const defendingBandIds = levelBands.filter(band => band.lastPlace === 1).map(band => band.id);
-    const otherBandIds = levelBands.filter(band => band.lastPlace !== 1).map(band => band.id);
+    const defendingBandIds = levelBands.filter(band => band.last_place === 1).map(band => band.id);
+    const otherBandIds = levelBands.filter(band => band.last_place !== 1).map(band => band.id);
 
     // Maintain a minimum number of bands at the lowest level, generating more as needed.
     if (level === 1 && levelBands.length < minLevel1Bands) {
@@ -118,7 +121,7 @@ Promise<WeekBattle[]> {
       otherBandIds.push(...newBandIds);
 
       await addNewSongs(newBandIds.flatMap(newBandId => range(songCount)
-        .map(() => ({ bandId: newBandId, name: songNameGen.generate() }))));
+        .map(() => ({ band_id: newBandId, name: songNameGen.generate() }))));
     }
 
     // Pick enough bands to exactly fill as many battles as possible.
@@ -136,7 +139,8 @@ Promise<WeekBattle[]> {
     ];
 
     // Create the battles for this level.
-    const battleIds = await addNewBattles(range(battleCount).map(() => ({ weekId, level })));
+    const battleIds = await addNewBattles(range(battleCount)
+      .map(() => ({ week_id: weekId, level })));
 
     // Assign bands to each battle.
     const levelBattles = await mapSeries(battleIds, async battleId => ({
@@ -146,8 +150,8 @@ Promise<WeekBattle[]> {
     }));
 
     // Create new entries now, so the next level will be able to pick from unentered bands.
-    await addNewEntries(levelBattles.flatMap(battle => battle.bandIds.map(bandId => (
-      { battleId: battle.battleId, bandId }))));
+    await addNewEntries(levelBattles.flatMap(battle => battle.bandIds
+      .map(bandId => ({ battle_id: battle.battleId, band_id: bandId }))));
 
     return levelBattles;
   })).flat();
@@ -173,7 +177,7 @@ export async function generateWeek(options?: WeekOptions) {
       .map(({ bandId, songIds }) => [bandId, songIds]));
 
     // Generate performances for each round.
-    const performances = range(bandIds.length - 1).flatMap(roundIndex => {
+    const performances: NewPerformance[] = range(bandIds.length - 1).flatMap(roundIndex => {
       // Create a performance for each surviving band, in random order.
       // TODO: store performances in a table, with reference to entry.
       const roundPerformances = shuffle(remainingBandIds).map(bandId => {
@@ -181,10 +185,10 @@ export async function generateWeek(options?: WeekOptions) {
         const songId = pickOut(songIdsByBandId[bandId] as number[]) as number;
         // Assign a random score to the performance.
         return {
-          battleId,
-          roundIndex,
-          bandId,
-          songId,
+          battle_id: battleId,
+          round_index: roundIndex,
+          band_id: bandId,
+          song_id: songId,
           score: Math.round(Math.random() * 100),
         };
       });
@@ -193,7 +197,7 @@ export async function generateWeek(options?: WeekOptions) {
       const minPerf = roundPerformances.reduce((mp, p) => (p.score < mp.score ? p : mp));
       // Remove the lowest-scoring band from the battle; add it to the top of the ranked list.
       rankedBandIds.unshift(
-        ...remainingBandIds.splice(remainingBandIds.indexOf(minPerf.bandId), 1));
+        ...remainingBandIds.splice(remainingBandIds.indexOf(minPerf.band_id), 1));
 
       return roundPerformances;
     });

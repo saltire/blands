@@ -1,7 +1,30 @@
 import { sql } from '@databases/pg';
 
 
-export type BattleSummary = any;
+export type BattleSummary = {
+  id: number,
+  rounds: {
+    performances: {
+      band: {
+        id: number,
+        name: string,
+        color_light: string,
+        color_dark: string,
+      },
+      song: {
+        id: number,
+        name: string,
+      },
+      score: number,
+    }[],
+  }[],
+  bands: {
+    id: number,
+    name: string,
+    color_light: string,
+    color_dark: string,
+  }[],
+};
 
 export const getBattleSummaryQuery = (battleId: number) => sql`
   SELECT

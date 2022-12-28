@@ -1,4 +1,4 @@
-import { NewBand } from './db';
+import { NewBand } from './db2';
 import { generateColorScheme } from './color';
 import { readCsv, csvToMap } from './csv';
 import { pick } from './utils';
@@ -49,12 +49,12 @@ export async function getBandGenerator(): Promise<Generator<NewBand>> {
 
       return {
         name: bandNameGen.generate(),
-        colorLight: light,
-        colorDark: dark,
+        color_light: light,
+        color_dark: dark,
         buzz: 10 ** level,
         level,
-        startWeekId: weekId,
-        startLevel: level,
+        start_week_id: weekId,
+        start_level: level,
       };
     },
   };

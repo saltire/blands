@@ -1,7 +1,31 @@
 import { sql } from '@databases/pg';
 
 
-export type BandSummary = any;
+export type BandSummary = {
+  id: number,
+  name: string,
+  color_light: string,
+  color_dark: string,
+  buzz: number,
+  level: number,
+  songs: {
+    id: number,
+    name: string,
+  }[],
+  battles: {
+    id: number,
+    week_id: number,
+    level: number,
+    place: number,
+    band_count: number,
+  }[],
+  weekly_buzz: {
+    week_id: number,
+    buzz: number,
+    level: number,
+    rank: number,
+  }[],
+};
 
 export const getBandSummaryQuery = (bandId: number) => sql`
   SELECT
