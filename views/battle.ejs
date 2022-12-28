@@ -1,23 +1,22 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset='utf-8'>
-    <title>Blattle of the Blands</title>
-    <link rel='stylesheet' href='/style.css'>
-  </head>
+  <%- include('partials/head') %>
+
   <body>
+    <%- include('partials/header') %>
+
     <header><h1>Battle #<%= battle.id %></h1></header>
 
     <main>
       <% battle.rounds.forEach((round, r) => { %>
         <h2>Round <%= r + 1 %></h2>
         <% round.performances.forEach(perf => { %>
-          <p><%- include('bandname', { band: perf.band }) %> - <%= perf.song.name %> - <b><%= perf.score %></b></p>
+          <p><%- include('partials/bandname', { band: perf.band }) %> - <%= perf.song.name %> - <b><%= perf.score %></b></p>
         <% }); %>
-        <h3>Eliminated: <%- include('bandname', { band: round.performances[round.performances.length - 1].band }) %></h3>
+        <h3>Eliminated: <%- include('partials/bandname', { band: round.performances[round.performances.length - 1].band }) %></h3>
       <% }); %>
     </main>
 
-    <h2>Winner: <%- include('bandname', { band: battle.bands[0].band }) %></h2>
+    <h2>Winner: <%- include('partials/bandname', { band: battle.bands[0].band }) %></h2>
   </body>
 </html>

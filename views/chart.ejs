@@ -1,12 +1,10 @@
 <!doctype html>
 <html class='single'>
-  <head>
-    <meta charset='utf-8'>
-    <title>Blattle of the Blands</title>
-    <link rel='stylesheet' href='/style.css'>
-    <script src='https://d3js.org/d3.v6.min.js'></script>
-  </head>
+  <%- include('partials/head', { scripts: ['https://d3js.org/d3.v6.min.js'] }) %>
+
   <body>
+    <%- include('partials/header', { active: 'chart' }) %>
+
     <header><h1>Weekly Buzz</h1></header>
 
     <main>

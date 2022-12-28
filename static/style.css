@@ -31,7 +31,33 @@ header form {
   display: inline-block;
 }
 
-.band-header {
+header.site-title {
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+header.site-title h1 {
+  margin: .75rem 0;
+  font-size: 2.5rem;
+  letter-spacing: .5rem;
+}
+
+header.site-title a {
+  display: inline-block;
+  margin: 0 1rem;
+  font-size: 1.25rem;
+  font-weight: 450;
+}
+
+header.site-title a.active {
+  color: yellow;
+}
+
+header.admin {
+  text-align: center;
+}
+
+header.band-header {
   margin-bottom: 20px;
   overflow: auto;
 }
@@ -114,6 +140,7 @@ input, button {
 
 .flex {
   display: flex;
+  overflow-x: auto;
 }
 
 svg {

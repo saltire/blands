@@ -1,13 +1,12 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset='utf-8'>
-    <title>Blattle of the Blands</title>
-    <link rel='stylesheet' href='/style.css'>
-  </head>
+  <%- include('partials/head') %>
+
   <body>
+    <%- include('partials/header', { active: 'battles' }) %>
+
     <% if (locals.admin) { %>
-      <header>
+      <header class='admin'>
         <form action='/admin/addWeek' method='post'>
           <input type='submit' value='Next week'>
         </form>
@@ -16,6 +15,7 @@
         </form>
       </header>
     <% } %>
+
     <div class='flex'>
       <% weeks.forEach(week => { %>
         <div class='week'>
@@ -23,7 +23,7 @@
 
           <h2><a href='/bands'>Top 10 Bands</a></h2>
           <% week.top_bands.forEach(band => { %>
-            <p><%= band.rank %>. <%- include('bandname', { band }) %> - <%= band.buzz %></p>
+            <p><%= band.rank %>. <%- include('partials/bandname', { band }) %> - <%= band.buzz %></p>
           <% }); %>
 
           <h2>Battles</h2>
@@ -33,7 +33,7 @@
               <h4><a href='/battle/<%= battle.id %>'>Battle #<%= battle.id %></a></h4>
               <div class='pad'>
                 <% battle.entries.forEach(entry => { %>
-                  <p><%- include('bandname', { band: entry.band }) %></p>
+                  <p><%- include('partials/bandname', { band: entry.band }) %></p>
                 <% }); %>
               </div>
             <% }); %>
