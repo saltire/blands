@@ -23,6 +23,7 @@ const db = createConnectionPool({
   bigIntMode: 'bigint',
   connectionString: process.env.DATABASE_URL,
 });
+export default db;
 
 const {
   band, battle, entry, performance, song, week, weekly_buzz: weeklyBuzz,
