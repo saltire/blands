@@ -74,14 +74,14 @@ Promise<WeekBattle[]> {
     }
 
     // Create the battles in the db.
-    const battleIds = await addNewBattles(range(battleCount)
-      .map(() => ({ week_id: weekId, level })));
+    const battleIds = await addNewBattles(
+      range(battleCount).map(() => ({ week_id: weekId, level })));
 
     // Pick bands for each battle and return them.
     const levelBattles = battleIds.map(battleId => ({
       battleId,
       level,
-      bandIds: range(battleSize).map(() => pickOut(enteringBandIds) as number),
+      bandIds: pickOutMultiple(enteringBandIds, battleSize),
     }));
 
     return levelBattles;
@@ -139,11 +139,11 @@ Promise<WeekBattle[]> {
     ];
 
     // Create the battles for this level.
-    const battleIds = await addNewBattles(range(battleCount)
-      .map(() => ({ week_id: weekId, level })));
+    const battleIds = await addNewBattles(
+      range(battleCount).map(() => ({ week_id: weekId, level })));
 
     // Assign bands to each battle.
-    const levelBattles = await mapSeries(battleIds, async battleId => ({
+    const levelBattles = battleIds.map(battleId => ({
       battleId,
       level,
       bandIds: pickOutMultiple(enteringBandIds, battleSize),

@@ -3,14 +3,12 @@ import { from as copyFrom } from 'pg-copy-streams';
 import fs from 'fs';
 import path from 'path';
 
+import { mapSeries } from '../utils';
+
 
 // https://musicbrainz.org/doc/MusicBrainz_Database/Download
 // mbdump and mbdump-derived
 const dataDir = path.resolve(__dirname, '../../data/mbdata');
-
-const series = <T>(array: T[], func: (item: T) => any) => (array || []).reduce(
-  (lastPromise: Promise<any>, item: T) => lastPromise.then(() => func(item)),
-  Promise.resolve());
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -58,7 +56,7 @@ async function copyCSVs() {
     'tag',
   ];
 
-  return series(tables, copyCSV);
+  return mapSeries(tables, copyCSV);
 }
 
 copyCSVs()
