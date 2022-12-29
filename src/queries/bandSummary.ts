@@ -33,6 +33,7 @@ export const getBandSummaryQuery = (bandId: number) => sql`
     band.name,
     band.color_light,
     band.color_dark,
+    string_to_array(band.tags, ', ') as tags,
     band.buzz,
     band.level,
     (

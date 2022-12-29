@@ -100,8 +100,20 @@ h5 {
 }
 
 p {
-  margin: 0 1rem 0 0;
+  margin: 0;
   white-space: nowrap;
+}
+
+p.spaced {
+  margin: 1rem 0;
+}
+
+span.tag {
+  display: inline-block;
+  margin-right: .5rem;
+  padding: 0 .5rem;
+  border-radius: 3px;
+  background-color: #444;
 }
 
 b {

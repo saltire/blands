@@ -1,17 +1,17 @@
 import { NewBand } from './db2';
 import { generateColorScheme } from './color';
-import { readCsv, csvToMap } from './csv';
+import { readCsvColumns } from './csv';
+import { getGenreTree, pickRandomGenre } from './genre';
 import { pick } from './utils';
 
 
-interface GeneratorConfig {}
-
-export interface Generator<T> {
-  generate: (config?: GeneratorConfig) => T,
+export type Generator<T, C extends object | undefined = undefined> = {
+  generate: (config?: C) => T,
 }
-export async function getGenerator(csvPath: string, capitalize?: boolean):
+
+export async function getCsvStringGenerator(csvPath: string, capitalize?: boolean):
 Promise<Generator<string>> {
-  const map = await readCsv(csvPath).then(csvToMap);
+  const map = await readCsvColumns(csvPath);
 
   return {
     generate() {
@@ -28,34 +28,45 @@ Promise<Generator<string>> {
   };
 }
 
+let bandNameGen: Generator<string>;
 export async function getBandNameGenerator() {
-  return getGenerator('data/bands.csv', false);
+  bandNameGen = bandNameGen || await getCsvStringGenerator('data/bands.csv', false);
+  return bandNameGen;
 }
 
+let songNameGen: Generator<string>;
 export async function getSongNameGenerator() {
-  return getGenerator('data/songs.csv', true);
+  songNameGen = songNameGen || await getCsvStringGenerator('data/songs.csv', true);
+  return songNameGen;
 }
 
-interface BandGeneratorConfig extends GeneratorConfig {
+let bandGen: Generator<NewBand, {
   weekId?: number,
   level?: number,
-}
-export async function getBandGenerator(): Promise<Generator<NewBand>> {
-  const bandNameGen = await getBandNameGenerator();
+}>;
+export async function getBandGenerator() {
+  if (!bandGen) {
+    const nameGen = await getBandNameGenerator();
+    const genres = await getGenreTree();
 
-  return {
-    generate({ weekId = 1, level = 1 }: BandGeneratorConfig = {}): NewBand {
-      const { light, dark } = generateColorScheme();
+    bandGen = {
+      generate({ weekId = 1, level = 1 } = {}) {
+        const { light, dark } = generateColorScheme();
+        const genre = pickRandomGenre(genres);
 
-      return {
-        name: bandNameGen.generate(),
-        color_light: light,
-        color_dark: dark,
-        buzz: 10 ** level,
-        level,
-        start_week_id: weekId,
-        start_level: level,
-      };
-    },
-  };
+        return {
+          name: nameGen.generate(),
+          color_light: light,
+          color_dark: dark,
+          tags: [...genre.parentGenres, genre.name].reverse().join(', '),
+          buzz: 10 ** level,
+          level,
+          start_week_id: weekId,
+          start_level: level,
+        };
+      },
+    };
+  }
+
+  return bandGen;
 }

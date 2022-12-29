@@ -2,16 +2,16 @@ import { random } from './utils';
 
 
 // All HSV/RGB values should be between 0 and 1.
-interface HSV {
+type HSV = {
   h: number,
   s: number,
   v: number,
-}
-interface RGB {
+};
+type RGB = {
   r: number,
   g: number,
   b: number,
-}
+};
 
 export function rgb2hex({ r, g, b }: RGB): string {
   return ['#', ...[r, g, b].map(c => Math.floor(c * 255).toString(16).padStart(2, '0'))].join('');

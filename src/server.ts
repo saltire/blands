@@ -69,13 +69,13 @@ router.get('/admin/clear', async (req, res) => {
   res.redirect('/admin');
 });
 router.get('/admin/migrate', async (req, res) => {
-  await migrate();
+  await migrate(!!req.query.drop);
   res.redirect('/admin');
 });
 
 router.get('/band', async (req, res) => {
-  const bandGen = await getBandNameGenerator();
-  res.send(bandGen.generate());
+  const bandNameGen = await getBandNameGenerator();
+  res.send(bandNameGen.generate());
 });
 router.get('/song', async (req, res) => {
   const songGen = await getSongNameGenerator();

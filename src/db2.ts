@@ -37,10 +37,26 @@ const sqlDir = path.resolve(__dirname, '../sql');
 
 export const runQuery = <T = any>(query: SQLQuery): Promise<T[]> => db.query(query);
 
-export const migrate = () => applyMigrations({
-  connection: db,
-  migrationsDirectory: path.resolve(sqlDir, 'migrations'),
-});
+export const migrate = async (drop?: boolean) => {
+  if (drop) {
+    await runQuery(sql`
+      DROP TABLE IF EXISTS
+        week,
+        band,
+        song,
+        weekly_buzz,
+        battle,
+        entry,
+        performance
+      CASCADE;
+    `);
+  }
+
+  return applyMigrations({
+    connection: db,
+    migrationsDirectory: path.resolve(sqlDir, 'migrations'),
+  });
+};
 
 // Utility
 

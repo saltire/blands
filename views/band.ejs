@@ -13,6 +13,10 @@
       <p><b>Level:</b> <%= band.level %></p>
       <p><b>Buzz:</b> <%= band.buzz %></p>
 
+      <p class='spaced'>
+        <% band.tags.forEach(tag => { %><span class='tag'><%= tag %></span><% }) %>
+      </p>
+
       <h2>Songs</h2>
       <% band.songs.forEach(song => { %>
         <p><%= song.name %></p>

@@ -7,6 +7,7 @@ CREATE TABLE band (
   name text NOT NULL,
   color_light text NOT NULL,
   color_dark text NOT NULL,
+  tags text NOT NULL,
   buzz integer NOT NULL DEFAULT 0,
   level integer NOT NULL DEFAULT 1,
   start_week_id integer NOT NULL REFERENCES week (id),

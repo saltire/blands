@@ -17,16 +17,16 @@ function getBuzzAwarded(levelBaseBuzz: number, index: number) {
 //   return Math.max(1, Math.floor(Math.log10(buzz)));
 // }
 
-interface WeekOptions {
-  maxLevel?: number;
-  battleSize?: number;
-}
+type WeekOptions = {
+  maxLevel?: number,
+  battleSize?: number,
+};
 
-interface WeekBattle {
+type WeekBattle = {
   battleId: number,
   level: number,
   bandIds: number[],
-}
+};
 
 // Run a fixed number of battles at each level.
 // Bands that are not picked for a battle at their level will skip the week.
