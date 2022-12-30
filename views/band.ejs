@@ -23,7 +23,7 @@
       <% }); %>
 
       <h2>Battles</h2>
-      <% band.battles.forEach(battle => { %>
+      <% (band.battles || []).forEach(battle => { %>
         <p>Week <%= battle.week_id %>: <a href='/battle/<%= battle.id %>'>Battle #<%= battle.id %></a> (<%= battle.place %>/<%= battle.band_count %>)</p>
       <% }); %>
 

@@ -33,11 +33,25 @@
               <h4><a href='/battle/<%= battle.id %>'>Battle #<%= battle.id %></a></h4>
               <div class='pad'>
                 <% battle.entries.forEach(entry => { %>
-                  <p><%- include('partials/bandname', { band: entry.band }) %></p>
+                  <p>
+                    <%- include('partials/bandname', { band: entry.band }) _%>
+                    <%= entry.band.new ? '*' : '' %> - <%= entry.band.buzz %>
+                  </p>
                 <% }); %>
               </div>
             <% }); %>
           <% }) %>
+
+          <% if (week.idle_bands) { %>
+            <h2>Not featured</h2>
+            <% week.idle_bands.forEach(band => { %>
+              <p>
+                <%- include('partials/bandname', { band }) _%>
+                <%= band.new ? '*' : '' _%>
+                <%= band.retiring ? '†' : '' %> - <%= band.buzz %>
+              </p>
+            <% }); %>
+          <% } %>
         </div>
       <% }); %>
     </div>

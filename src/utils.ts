@@ -14,7 +14,7 @@ export const pickOut = <T>(array: T[]) => array.splice(Math.floor(Math.random() 
 export const random = ({ min = 0, max = 1 }: { min?: number, max?: number } = {}): number => (
   (Math.random() * (max - min)) + min);
 
-export const range = (length: number) => [...Array(length).keys()];
+export const range = (length: number) => [...Array(Math.max(0, length)).keys()];
 
 export const shuffle = <T>(array: T[]) => {
   const remaining = [...array];

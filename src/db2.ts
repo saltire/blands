@@ -1,6 +1,6 @@
 import createConnectionPool, { sql, SQLQuery } from '@databases/pg';
 import { applyMigrations } from '@databases/pg-migrations';
-import tables from '@databases/pg-typed';
+import tables, { lessThan } from '@databases/pg-typed';
 import path from 'path';
 
 import DatabaseSchema, {
@@ -12,10 +12,12 @@ import DatabaseSchema, {
   Week,
 } from './__generated__';
 import databaseSchema from './__generated__/schema.json';
+import { BandBuzzUpdate, getAddBuzzQuery } from './queries/addBuzz';
 import { AllWeeklyBuzz, allWeeklyBuzzQuery } from './queries/allWeeklyBuzz';
 import { BandSummary, getBandSummaryQuery } from './queries/bandSummary';
 import { BattleSummary, getBattleSummaryQuery } from './queries/battleSummary';
 import { BandCandidate, getFreeBandsAtLevelQuery } from './queries/freeBandsAtLevel';
+import { getSetWeeklyBuzzQuery } from './queries/setWeeklyBuzz';
 import { WeekSummary, weekSummariesQuery } from './queries/weekSummary';
 
 
@@ -112,3 +114,15 @@ export const addNewSongs = (newSongs: NewSong[]) => song(db).insert(...newSongs)
 // export const addNewWeek = () => week(db).insert({}).then(weeks => weeks[0]?.id);
 export const addNewWeek = () => runQuery<Week>(sql`INSERT INTO week DEFAULT VALUES RETURNING id`)
   .then(weeks => weeks[0]?.id);
+
+// Simple update queries
+
+export const retireBands = async (weekId: number) => band(db)
+  .update({ level: lessThan(1), retire_week_id: null }, { retire_week_id: weekId });
+
+// Complex update queries
+
+export const addBandsBuzz = async (weekId: number, updates: BandBuzzUpdate[]) => runQuery(
+  getAddBuzzQuery(weekId, updates));
+
+export const setWeeklyBuzz = async (weekId: number) => runQuery(getSetWeeklyBuzzQuery(weekId));

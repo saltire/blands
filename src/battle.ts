@@ -1,9 +1,9 @@
 import {
-  addBandsBuzz, getBandsAtLevel, getBandsSongIds, updateEntries, halveBuzz, setWeeklyBuzz,
+  getBandsAtLevel, getBandsSongIds, updateEntries, halveBuzz,
 } from './db';
 import {
-  addNewBands, addNewBattles, addNewEntries, addNewPerformances, addNewSongs, addNewWeek,
-  getFreeBandsAtLevel, NewPerformance,
+  addBandsBuzz, addNewBands, addNewBattles, addNewEntries, addNewPerformances, addNewSongs,
+  addNewWeek, getFreeBandsAtLevel, retireBands, setWeeklyBuzz, NewPerformance,
 } from './db2';
 import { getBandGenerator, getSongNameGenerator } from './generator';
 import { mapSeries, pickOut, pickOutMultiple, range, shuffle } from './utils';
@@ -20,6 +20,20 @@ function getBuzzAwarded(levelBaseBuzz: number, index: number) {
 type WeekOptions = {
   maxLevel?: number,
   battleSize?: number,
+  // Fixed only.
+  getMinBattleCount?: (level: number, maxLevel: number) => number,
+  // Seeded only.
+  minNewBandCount?: number,
+  getMaxBattleCount?: (level: number, maxLevel: number) => number,
+};
+
+const defaultOptions: Required<WeekOptions> = {
+  maxLevel: 5,
+  battleSize: 5,
+  // The top level has one battle, and each level down has one more than the above.
+  getMinBattleCount: (level, maxLevel) => maxLevel - level + 1,
+  minNewBandCount: 5,
+  getMaxBattleCount: (level, maxLevel) => maxLevel - level + 2,
 };
 
 type WeekBattle = {
@@ -32,7 +46,7 @@ type WeekBattle = {
 // Bands that are not picked for a battle at their level will skip the week.
 export async function getWeekBattlesFixed(weekId: number, options?: WeekOptions):
 Promise<WeekBattle[]> {
-  const { maxLevel = 5, battleSize = 5 } = options || {};
+  const { maxLevel, battleSize, getMinBattleCount } = { ...defaultOptions, ...options };
   const songCount = battleSize - 1;
 
   const bandGen = await getBandGenerator();
@@ -42,8 +56,8 @@ Promise<WeekBattle[]> {
 
   // Create battles at each level; pick bands and create entries for each battle.
   const newBattles = (await mapSeries(levels, async level => {
-    // The top level has one battle; each level down has one more than the one above it.
-    const minBattleCount = maxLevel - level + 1;
+    // Get the minimum number of battles for each level.
+    const minBattleCount = getMinBattleCount(level, maxLevel);
     const minBandCount = minBattleCount * battleSize;
 
     // Get all bands at this level.
@@ -98,44 +112,66 @@ Promise<WeekBattle[]> {
 // Bands that are not picked for a battle at their level can be picked at lower levels.
 export async function getWeekBattlesSeeded(weekId: number, options?: WeekOptions):
 Promise<WeekBattle[]> {
-  const { maxLevel = 5, battleSize = 5 } = options || {};
+  const {
+    maxLevel, battleSize, minNewBandCount, getMaxBattleCount,
+  } = { ...defaultOptions, ...options };
 
-  const minLevel1Bands = maxLevel * battleSize;
   const songCount = battleSize - 1;
 
   return (await mapSeries(range(maxLevel), async l => {
     const level = maxLevel - l;
+    const maxBattleCount = getMaxBattleCount(level, maxLevel);
 
     // Get all bands at this level or higher who have not been entered yet.
     const levelBands = await getFreeBandsAtLevel(weekId, level);
+
+    // Prioritize bands that won their last battle.
+    // (An alternate way would be to pick the highest *ranking* bands at this level, or both.)
     const defendingBandIds = levelBands.filter(band => band.last_place === 1).map(band => band.id);
+    // After that, if we are at the first level, prioritize a quota of new bands.
+    const priorityNewBandIds = [];
     const otherBandIds = levelBands.filter(band => band.last_place !== 1).map(band => band.id);
 
     // Maintain a minimum number of bands at the lowest level, generating more as needed.
-    if (level === 1 && levelBands.length < minLevel1Bands) {
-      const bandGen = await getBandGenerator();
-      const songNameGen = await getSongNameGenerator();
+    // Even if there are already enough, there may be a minimum number of NEW bands every week.
+    if (level === 1) {
+      const minLevel1Bands = maxBattleCount * battleSize;
+      const newBandCount = Math.max(minNewBandCount, minLevel1Bands - levelBands.length);
 
-      const newBandIds = await addNewBands(range(minLevel1Bands - levelBands.length)
-        .map(() => bandGen.generate({ weekId, level })));
-      otherBandIds.push(...newBandIds);
+      if (newBandCount) {
+        const bandGen = await getBandGenerator();
+        const songNameGen = await getSongNameGenerator();
 
-      await addNewSongs(newBandIds.flatMap(newBandId => range(songCount)
-        .map(() => ({ band_id: newBandId, name: songNameGen.generate() }))));
+        const newBandIds = await addNewBands(range(newBandCount)
+          .map(() => bandGen.generate({ weekId, level })));
+
+        // After defending bands, give a quota of new bands priority over the rest.
+        priorityNewBandIds.push(...pickOutMultiple(newBandIds, minNewBandCount));
+        otherBandIds.push(...newBandIds);
+
+        await addNewSongs([...priorityNewBandIds, ...newBandIds]
+          .flatMap(newBandId => range(songCount)
+            .map(() => ({ band_id: newBandId, name: songNameGen.generate() }))));
+      }
     }
 
-    // Pick enough bands to exactly fill as many battles as possible.
-    const battleCount = Math.floor((defendingBandIds.length + otherBandIds.length) / battleSize);
+    // Pick enough bands to exactly fill as many battles as possible, up to a maximum.
+    const battleCount = Math.min(maxBattleCount, Math.floor(
+      (defendingBandIds.length + priorityNewBandIds.length + otherBandIds.length) / battleSize));
     if (!battleCount) {
       return [];
     }
+    const bandCount = battleCount * battleSize;
 
-    // Prioritize bands that won their last battle.
-    // An alternate way would be to pick the highest *ranking* bands at this level, or both.
+    // Pick bands from each pool in order of priority.
+    const selectedPriorityBandIds = pickOutMultiple(priorityNewBandIds,
+      bandCount - defendingBandIds.length);
+    const selectedOtherBandIds = pickOutMultiple(otherBandIds,
+      bandCount - defendingBandIds.length - selectedPriorityBandIds.length);
     const enteringBandIds = [
       ...defendingBandIds,
-      ...pickOutMultiple(otherBandIds,
-        Math.max(0, (battleCount * battleSize) - defendingBandIds.length)),
+      ...selectedPriorityBandIds,
+      ...selectedOtherBandIds,
     ];
 
     // Create the battles for this level.
@@ -160,6 +196,7 @@ Promise<WeekBattle[]> {
 export async function generateWeek(options?: WeekOptions) {
   const weekId = await addNewWeek();
 
+  // const newBattles = await getWeekBattlesFixed(weekId, options);
   const newBattles = await getWeekBattlesSeeded(weekId, options);
 
   // Halve every band's buzz.
@@ -222,9 +259,11 @@ export async function generateWeek(options?: WeekOptions) {
     updateEntries(battleResults.flatMap(battle => battle.entries)),
     addNewPerformances(battleResults.flatMap(battle => battle.performances)),
     // Update each band with buzz awarded.
-    addBandsBuzz(battleResults.flatMap(battle => battle.entries
+    addBandsBuzz(weekId, battleResults.flatMap(battle => battle.entries
       .map(({ bandId, buzzAwarded }) => ({ bandId, buzz: buzzAwarded }))))
-      .then(() => setWeeklyBuzz(weekId)),
+      .then(() => setWeeklyBuzz(weekId))
+      // Retire bands that have fallen below level 1.
+      .then(() => retireBands(weekId)),
   ]);
 
   return weekId;

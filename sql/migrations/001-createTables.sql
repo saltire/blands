@@ -1,8 +1,8 @@
-CREATE TABLE week (
+CREATE TABLE IF NOT EXISTS week (
   id serial NOT NULL PRIMARY KEY
 );
 
-CREATE TABLE band (
+CREATE TABLE IF NOT EXISTS band (
   id serial NOT NULL PRIMARY KEY,
   name text NOT NULL,
   color_light text NOT NULL,
@@ -11,29 +11,30 @@ CREATE TABLE band (
   buzz integer NOT NULL DEFAULT 0,
   level integer NOT NULL DEFAULT 1,
   start_week_id integer NOT NULL REFERENCES week (id),
-  start_level integer NOT NULL DEFAULT 1
+  start_level integer NOT NULL DEFAULT 1,
+  retire_week_id integer REFERENCES week (id)
 );
 
-CREATE TABLE song (
+CREATE TABLE IF NOT EXISTS song (
   id serial NOT NULL PRIMARY KEY,
   band_id integer NOT NULL REFERENCES band (id),
   name text NOT NULL
 );
 
-CREATE TABLE weekly_buzz (
+CREATE TABLE IF NOT EXISTS weekly_buzz (
   week_id integer NOT NULL REFERENCES week (id),
   band_id integer NOT NULL REFERENCES band (id),
   buzz integer NOT NULL DEFAULT 0,
   PRIMARY KEY (week_id, band_id)
 );
 
-CREATE TABLE battle (
+CREATE TABLE IF NOT EXISTS battle (
   id serial NOT NULL PRIMARY KEY,
   week_id integer NOT NULL REFERENCES week (id),
   level integer NOT NULL
 );
 
-CREATE TABLE entry (
+CREATE TABLE IF NOT EXISTS entry (
   battle_id integer NOT NULL REFERENCES battle (id),
   band_id integer NOT NULL REFERENCES band (id),
   place integer,
@@ -41,7 +42,7 @@ CREATE TABLE entry (
   PRIMARY KEY (battle_id, band_id)
 );
 
-CREATE TABLE performance (
+CREATE TABLE IF NOT EXISTS performance (
   battle_id integer NOT NULL REFERENCES battle (id),
   round_index integer NOT NULL,
   band_id integer NOT NULL REFERENCES band (id),

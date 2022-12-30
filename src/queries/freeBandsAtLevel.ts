@@ -1,10 +1,10 @@
 import { sql } from '@databases/pg';
 
-import { Entry } from '../__generated__';
+import { Band, Entry } from '../__generated__';
 
 
 export type BandCandidate = {
-  id: Entry['band_id'],
+  id: Band['id'],
   last_place: Entry['place'],
 };
 
@@ -32,6 +32,7 @@ export const getFreeBandsAtLevelQuery = (weekId: number, minLevel: number) => sq
       ) AS last_place
       FROM band
       WHERE band.level >= ${minLevel}
+      AND (band.retire_week_id IS NULL OR band.retire_week_id > ${weekId})
   ) band_entry
   WHERE band_entry.this_week_battle_id IS NULL
 `;
