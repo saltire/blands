@@ -2,7 +2,7 @@ import {
   addBandsBuzz, addNewBands, addNewBattles, addNewEntries, addNewPerformances, addNewSongs,
   addNewWeek, getBandsAtLevel, getBandsSongIds, getFreeBandsAtLevel, halveBuzz, retireBands,
   setWeeklyBuzz, updateEntries, BandBuzzUpdate, Entry, NewPerformance,
-} from './db2';
+} from './db';
 import { getBandGenerator, getSongNameGenerator } from './generator';
 import { mapSeries, pickOut, pickOutMultiple, range, shuffle } from './utils';
 

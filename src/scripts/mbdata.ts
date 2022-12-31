@@ -2,7 +2,7 @@ import { sql } from '@databases/pg';
 import path from 'path';
 
 import { writeCsv } from '../csv';
-import db from '../db2';
+import db from '../db';
 
 
 type GenreResult = {

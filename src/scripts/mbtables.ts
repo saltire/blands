@@ -1,6 +1,6 @@
 import { sql } from '@databases/pg';
 
-import db from '../db2';
+import db from '../db';
 
 // https://github.com/metabrainz/musicbrainz-server/blob/master/admin/sql/CreateTables.sql
 

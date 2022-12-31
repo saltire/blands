@@ -6,7 +6,7 @@ import path from 'path';
 import { generateWeek } from './battle';
 import {
   clearAll, getAllWeeklyBuzz, getBands, getBandSummary, getBattleSummary, getWeekSummaries, migrate,
-} from './db2';
+} from './db';
 import { getBandNameGenerator, getSongNameGenerator } from './generator';
 
 

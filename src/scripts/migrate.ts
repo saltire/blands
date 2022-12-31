@@ -1,4 +1,4 @@
-import { migrate } from '../db2';
+import { migrate } from '../db';
 
 
 migrate()

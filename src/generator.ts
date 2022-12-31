@@ -1,4 +1,4 @@
-import { NewBand } from './db2';
+import { NewBand } from './db';
 import { generateColorScheme } from './color';
 import { readCsvColumns } from './csv';
 import { getGenreTree, pickRandomGenre } from './genre';
