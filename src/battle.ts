@@ -1,9 +1,7 @@
 import {
-  getBandsAtLevel, getBandsSongIds, updateEntries, halveBuzz,
-} from './db';
-import {
   addBandsBuzz, addNewBands, addNewBattles, addNewEntries, addNewPerformances, addNewSongs,
-  addNewWeek, getFreeBandsAtLevel, retireBands, setWeeklyBuzz, NewPerformance,
+  addNewWeek, getBandsAtLevel, getBandsSongIds, getFreeBandsAtLevel, halveBuzz, retireBands,
+  setWeeklyBuzz, updateEntries, BandBuzzUpdate, Entry, NewPerformance,
 } from './db2';
 import { getBandGenerator, getSongNameGenerator } from './generator';
 import { mapSeries, pickOut, pickOutMultiple, range, shuffle } from './utils';
@@ -62,7 +60,7 @@ Promise<WeekBattle[]> {
 
     // Get all bands at this level.
     const levelBands = await getBandsAtLevel(level);
-    const firstBandIds = levelBands.filter(band => band.lastPlace === 1).map(band => band.id);
+    const firstBandIds = levelBands.filter(band => band.last_place === 1).map(band => band.id);
 
     // Bands that placed first in their last battle get picked first.
     const enteringBandIds = pickOutMultiple(firstBandIds, minBandCount);
@@ -193,6 +191,11 @@ Promise<WeekBattle[]> {
   })).flat();
 }
 
+type BattleResult = {
+  entries: (Omit<Entry, keyof BandBuzzUpdate> & BandBuzzUpdate)[],
+  performances: NewPerformance[],
+};
+
 export async function generateWeek(options?: WeekOptions) {
   const weekId = await addNewWeek();
 
@@ -203,56 +206,57 @@ export async function generateWeek(options?: WeekOptions) {
   await halveBuzz();
 
   // Run the battles.
-  const battleResults = await Promise.all(newBattles.map(async ({ battleId, level, bandIds }) => {
-    const levelBaseBuzz = 10 ** level;
+  const battleResults: BattleResult[] = await Promise.all(newBattles
+    .map(async ({ battleId, level, bandIds }) => {
+      const levelBaseBuzz = 10 ** level;
 
-    const remainingBandIds = [...bandIds];
-    const rankedBandIds: number[] = [];
+      const remainingBandIds = [...bandIds];
+      const rankedBandIds: number[] = [];
 
-    // TODO: get a random selection of each band's songs from the db, instead of all songs.
-    const songIdsByBandId = Object.fromEntries((await getBandsSongIds(bandIds))
-      .map(({ bandId, songIds }) => [bandId, songIds]));
+      // TODO: get a random selection of each band's songs from the db, instead of all songs.
+      const songIdsByBandId = Object.fromEntries((await getBandsSongIds(bandIds))
+        .map(bandSongIds => [bandSongIds.band_id, bandSongIds.song_ids]));
 
-    // Generate performances for each round.
-    const performances: NewPerformance[] = range(bandIds.length - 1).flatMap(roundIndex => {
-      // Create a performance for each surviving band, in random order.
-      // TODO: store performances in a table, with reference to entry.
-      const roundPerformances = shuffle(remainingBandIds).map(bandId => {
-        // Pick a song that hasn't been performed yet.
-        const songId = pickOut(songIdsByBandId[bandId] as number[]) as number;
-        // Assign a random score to the performance.
-        return {
-          battle_id: battleId,
-          round_index: roundIndex,
-          band_id: bandId,
-          song_id: songId,
-          score: Math.round(Math.random() * 100),
-        };
+      // Generate performances for each round.
+      const performances: NewPerformance[] = range(bandIds.length - 1).flatMap(roundIndex => {
+        // Create a performance for each surviving band, in random order.
+        // TODO: store performances in a table, with reference to entry.
+        const roundPerformances = shuffle(remainingBandIds).map(bandId => {
+          // Pick a song that hasn't been performed yet.
+          const songId = pickOut(songIdsByBandId[bandId]) as number;
+          // Assign a random score to the performance.
+          return {
+            battle_id: battleId,
+            round_index: roundIndex,
+            band_id: bandId,
+            song_id: songId,
+            score: Math.round(Math.random() * 100),
+          };
+        });
+
+        // Get the lowest-scoring performance (without sorting the array).
+        const minPerf = roundPerformances.reduce((mp, p) => (p.score < mp.score ? p : mp));
+        // Remove the lowest-scoring band from the battle; add it to the top of the ranked list.
+        rankedBandIds.unshift(
+          ...remainingBandIds.splice(remainingBandIds.indexOf(minPerf.band_id), 1));
+
+        return roundPerformances;
       });
 
-      // Get the lowest-scoring performance (without sorting the array).
-      const minPerf = roundPerformances.reduce((mp, p) => (p.score < mp.score ? p : mp));
-      // Remove the lowest-scoring band from the battle; add it to the top of the ranked list.
-      rankedBandIds.unshift(
-        ...remainingBandIds.splice(remainingBandIds.indexOf(minPerf.band_id), 1));
+      // Add the last remaining band to the top of the ranked list.
+      rankedBandIds.unshift(...remainingBandIds);
 
-      return roundPerformances;
-    });
-
-    // Add the last remaining band to the top of the ranked list.
-    rankedBandIds.unshift(...remainingBandIds);
-
-    // Store each band in an battle+band 'entry' junction table, with their ranking.
-    return {
-      entries: rankedBandIds.map((bandId, i) => ({
-        battleId,
-        bandId,
-        place: i + 1,
-        buzzAwarded: getBuzzAwarded(levelBaseBuzz, i),
-      })),
-      performances,
-    };
-  }));
+      // Store each band in an battle+band 'entry' junction table, with their ranking.
+      return {
+        entries: rankedBandIds.map((bandId, i) => ({
+          battle_id: battleId,
+          band_id: bandId,
+          place: i + 1,
+          buzz_awarded: getBuzzAwarded(levelBaseBuzz, i),
+        })),
+        performances,
+      };
+    }));
 
   await Promise.all([
     // Store all battles' entries and performances.
@@ -260,7 +264,7 @@ export async function generateWeek(options?: WeekOptions) {
     addNewPerformances(battleResults.flatMap(battle => battle.performances)),
     // Update each band with buzz awarded.
     addBandsBuzz(weekId, battleResults.flatMap(battle => battle.entries
-      .map(({ bandId, buzzAwarded }) => ({ bandId, buzz: buzzAwarded }))))
+      .map(entry => ({ band_id: entry.band_id, buzz_awarded: entry.buzz_awarded }))))
       .then(() => setWeeklyBuzz(weekId))
       // Retire bands that have fallen below level 1.
       .then(() => retireBands(weekId)),

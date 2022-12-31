@@ -6,7 +6,7 @@ import path from 'path';
 import DatabaseSchema, {
   Band_InsertParameters as NewBand,
   Battle_InsertParameters as NewBattle,
-  Entry_InsertParameters as NewEntry,
+  Entry, Entry_InsertParameters as NewEntry,
   Performance_InsertParameters as NewPerformance,
   Song_InsertParameters as NewSong,
   Week,
@@ -14,6 +14,8 @@ import DatabaseSchema, {
 import databaseSchema from './__generated__/schema.json';
 import { BandBuzzUpdate, getAddBuzzQuery } from './queries/addBuzz';
 import { AllWeeklyBuzz, allWeeklyBuzzQuery } from './queries/allWeeklyBuzz';
+import { getBandsAtLevelQuery } from './queries/bandsAtLevel';
+import { BandSongIds, getBandsSongIdsQuery } from './queries/bandsSongIds';
 import { BandSummary, getBandSummaryQuery } from './queries/bandSummary';
 import { BattleSummary, getBattleSummaryQuery } from './queries/battleSummary';
 import { BandCandidate, getFreeBandsAtLevelQuery } from './queries/freeBandsAtLevel';
@@ -32,7 +34,7 @@ const {
 } = tables<DatabaseSchema>({ databaseSchema });
 export {
   band, battle, entry, performance, song, week, weeklyBuzz,
-  NewBand, NewBattle, NewEntry, NewPerformance, NewSong,
+  BandBuzzUpdate, Entry, NewBand, NewBattle, NewEntry, NewPerformance, NewSong,
 };
 
 const sqlDir = path.resolve(__dirname, '../sql');
@@ -83,6 +85,12 @@ export const getBands = () => band(db).find().orderByDesc('buzz').all();
 
 export const getAllWeeklyBuzz = () => runQuery<AllWeeklyBuzz>(allWeeklyBuzzQuery);
 
+export const getBandsAtLevel = (level: number) => runQuery<BandCandidate>(
+  getBandsAtLevelQuery(level));
+
+export const getBandsSongIds = (bandIds: number[]) => runQuery<BandSongIds>(
+  getBandsSongIdsQuery(bandIds));
+
 export const getBandSummary = (bandId: number) => runQuery<BandSummary>(
   getBandSummaryQuery(bandId))
   .then(results => results[0]);
@@ -111,14 +119,34 @@ export const addNewPerformances = (newPerformances: NewPerformance[]) => perform
 
 export const addNewSongs = (newSongs: NewSong[]) => song(db).insert(...newSongs);
 
-// export const addNewWeek = () => week(db).insert({}).then(weeks => weeks[0]?.id);
-export const addNewWeek = () => runQuery<Week>(sql`INSERT INTO week DEFAULT VALUES RETURNING id`)
+export const addNewWeek = () => runQuery<Week>(sql`
+  INSERT INTO week
+  DEFAULT VALUES
+  RETURNING id
+`)
   .then(weeks => weeks[0]?.id);
+
+export const halveBuzz = () => runQuery(sql`
+  UPDATE band
+  SET
+    buzz = buzz / 2,
+    level = get_level(buzz / 2)
+`);
 
 // Simple update queries
 
 export const retireBands = async (weekId: number) => band(db)
   .update({ level: lessThan(1), retire_week_id: null }, { retire_week_id: weekId });
+
+export const updateEntries = async (updates: Entry[]) => entry(db)
+  .bulkUpdate({
+    whereColumnNames: ['battle_id', 'band_id'],
+    setColumnNames: ['place', 'buzz_awarded'],
+    updates: updates.map(update => ({
+      where: { battle_id: update.battle_id, band_id: update.band_id },
+      set: { place: update.place ?? null, buzz_awarded: update.buzz_awarded ?? null },
+    })),
+  });
 
 // Complex update queries
 
